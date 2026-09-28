@@ -75,7 +75,65 @@ function messagePage() {
  return `${pageHead('KOMUNIKASI','Pesan WhatsApp','Pilih pelanggan, siapkan pesan, lalu kirim langsung melalui WhatsApp.',`<button class="btn primary" data-modal="template">＋ Buat template</button>`)}<div class="message-layout"><section class="panel message-compose"><div class="panel-head"><div><h2>Kirim pesan ke pelanggan</h2><p>Pesan terbuka di WhatsApp agar Anda bisa memeriksanya sebelum dikirim.</p></div><span class="wa-badge">WA</span></div><label>Pilih pelanggan<select id="message-customer"><option value="">Pilih pelanggan…</option>${state.customers.filter(c=>c.phone).map(c=>`<option value="${c.id}">${esc(c.full_name)} · ${esc(c.phone)}</option>`).join('')}</select></label><label>Gunakan template<select id="message-template"><option value="">Tulis pesan sendiri</option>${state.templates.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('')}</select></label><label>Isi pesan<textarea id="message-body" rows="6" placeholder="Halo {nama}, kami mengingatkan bahwa…"></textarea><small class="field-hint">Variabel tersedia: {nama}, {usaha}, {paket}, {tagihan}</small></label><button class="btn whatsapp full" data-action="send-message">Buka WhatsApp ↗</button><div class="send-note">WhatsApp akan terbuka dengan pesan terisi. Tekan kirim di aplikasi WhatsApp Anda.</div></section><section class="panel templates-panel"><div class="panel-head"><div><h2>Template pesan</h2><p>Simpan pesan yang sering digunakan.</p></div></div>${state.templates.length?state.templates.map(t=>`<article class="template-card"><div><span class="template-type">${esc(t.category)}</span><b>${esc(t.title)}</b></div><p>${esc(t.message)}</p><div><button class="text-button" data-edit="template:${t.id}">Edit</button><button class="text-button danger-text" data-delete="template:${t.id}">Hapus</button></div></article>`).join(''):`<div class="empty-state compact"><span class="empty-icon">◌</span><b>Template belum tersedia</b><p>Buat template pengingat agar mengirim pesan lebih praktis.</p><button class="btn secondary small" data-modal="template">＋ Tambah template</button></div>`}</section></div>`;
 }
 function settingsPage() {
- return `${pageHead('PREFERENSI','Pengaturan usaha','Atur identitas usaha yang digunakan pada dashboard dan pesan pelanggan.','')}<div class="settings-layout"><section class="panel settings-panel"><div class="panel-head"><div><h2>Profil usaha</h2><p>Informasi ini hanya terlihat di akun Anda.</p></div><span class="settings-symbol">⚙</span></div><form id="settings-form" class="form-grid"><label>Nama usaha<input name="business_name" required value="${esc(state.profile?.business_name||'')}"></label><label>Nama pemilik<input name="owner_name" value="${esc(state.profile?.owner_name||'')}"></label><label>Kode negara WhatsApp<input name="whatsapp_country_code" value="${esc(state.profile?.whatsapp_country_code||'62')}" placeholder="62"><small class="field-hint">Untuk nomor Indonesia gunakan 62.</small></label><label>Akun login<input value="${esc(state.user.user_metadata?.username||state.user.email)}" disabled></label><div class="form-actions"><button class="btn primary">Simpan pengaturan</button></div></form></section><section class="panel preferences-card"><h2>Tampilan aplikasi</h2><p>Pilih tema yang nyaman digunakan.</p><div class="theme-options"><button class="theme-option ${state.theme==='light'?'chosen':''}" data-theme-set="light"><span>☼</span><b>Terang</b></button><button class="theme-option ${state.theme==='dark'?'chosen':''}" data-theme-set="dark"><span>☾</span><b>Gelap</b></button></div><hr><h2>Keamanan data</h2><p>Setiap akun hanya dapat mengakses data usaha miliknya sendiri.</p><span class="security-chip">✓ Perlindungan aktif</span></section></div>`;
+ const p=state.profile||{};
+ const input=(label,key,{type='text',placeholder='',required=false,wide=false,maxlength=120,hint=''}={})=>`<label class="${wide?'wide':''}">${label}<input type="${type}" name="${key}" maxlength="${maxlength}" value="${esc(p[key]||'')}" placeholder="${esc(placeholder)}" ${required?'required':''}>${hint?`<small class="field-hint">${hint}</small>`:''}</label>`;
+ const area=(label,key,placeholder,maxlength=500)=>`<label class="wide">${label}<textarea name="${key}" rows="3" maxlength="${maxlength}" placeholder="${esc(placeholder)}">${esc(p[key]||'')}</textarea></label>`;
+ const username=state.user.user_metadata?.username||state.user.email?.split('@')[0]||'—';
+ const essentials=['business_name','owner_name','business_whatsapp','business_address','business_city','service_area'];
+ const completed=essentials.filter(key=>String(p[key]||'').trim()).length;
+ return `${pageHead('PREFERENSI','Pengaturan usaha','Lengkapi identitas pemilik dan bisnis agar informasi usaha lebih rapi dan mudah ditemukan.','')}
+ <div class="settings-layout">
+   <section class="panel settings-panel expanded-settings">
+     <div class="settings-heading"><div class="settings-heading-icon">⚙</div><div><span class="eyebrow">PROFIL & IDENTITAS</span><h2>Informasi pengguna dan bisnis</h2><p>Semua detail tersimpan pada profil akun Anda. Kolom selain nama usaha bersifat opsional.</p></div></div>
+     <form id="settings-form" class="settings-form">
+       <section class="settings-group"><div class="settings-group-title"><span class="settings-step">01</span><div><h3>Informasi pengguna</h3><p>Identitas pemilik atau pengelola utama usaha WiFi.</p></div></div>
+         <div class="settings-fields">
+           ${input('Nama pemilik / pengelola','owner_name',{placeholder:'Nama lengkap'})}
+           ${input('Jabatan / peran','owner_role',{placeholder:'Contoh: Pemilik / Admin'})}
+           ${input('Nomor HP pribadi','owner_phone',{type:'tel',placeholder:'08xxxxxxxxxx',maxlength:25})}
+           <label>Username untuk masuk<input type="text" value="${esc(username)}" readonly class="readonly-field"><small class="field-hint">Hanya ditampilkan. Mengubah profil tidak mengganti username atau kata sandi.</small></label>
+         </div>
+       </section>
+       <section class="settings-group"><div class="settings-group-title"><span class="settings-step">02</span><div><h3>Identitas bisnis</h3><p>Kontak dan informasi utama layanan internet.</p></div></div>
+         <div class="settings-fields">
+           ${input('Nama usaha / brand','business_name',{placeholder:'Contoh: WiFi Berkah',required:true})}
+           <label>Jenis usaha<input name="business_type" list="business-type-options" maxlength="80" value="${esc(p.business_type||'')}" placeholder="Pilih atau tulis jenis usaha"><datalist id="business-type-options"><option value="RT/RW Net"></option><option value="Penyedia Internet"></option><option value="Reseller WiFi"></option><option value="Hotspot / Voucher"></option></datalist></label>
+           ${input('Nomor telepon bisnis','business_phone',{type:'tel',placeholder:'Nomor layanan pelanggan',maxlength:25})}
+           ${input('WhatsApp bisnis','business_whatsapp',{type:'tel',placeholder:'08xxxxxxxxxx',maxlength:25})}
+           ${input('Email bisnis','business_email',{type:'email',placeholder:'kontak@bisnis.com',maxlength:160})}
+           ${input('Website bisnis','business_website',{type:'url',placeholder:'https://contoh.com',maxlength:220})}
+           ${input('Kode negara WhatsApp','whatsapp_country_code',{placeholder:'62',maxlength:5,hint:'Gunakan 62 untuk nomor Indonesia pada tautan WhatsApp.'})}
+           ${input('Jam operasional','operating_hours',{placeholder:'Senin–Sabtu, 08.00–21.00',maxlength:120})}
+           ${area('Deskripsi singkat usaha','business_description','Layanan atau keunggulan usaha Anda.',500)}
+         </div>
+       </section>
+       <section class="settings-group"><div class="settings-group-title"><span class="settings-step">03</span><div><h3>Alamat dan jangkauan</h3><p>Lokasi operasional dan wilayah layanan pelanggan.</p></div></div>
+         <div class="settings-fields">
+           ${area('Alamat usaha','business_address','Jalan, nomor, RT/RW, dan patokan.',300)}
+           ${input('Desa / Kelurahan','business_village',{placeholder:'Nama desa atau kelurahan'})}
+           ${input('Kecamatan','business_district',{placeholder:'Nama kecamatan'})}
+           ${input('Kota / Kabupaten','business_city',{placeholder:'Contoh: Malang'})}
+           ${input('Provinsi','business_province',{placeholder:'Contoh: Jawa Timur'})}
+           ${input('Kode pos','business_postal_code',{placeholder:'65100',maxlength:10})}
+           ${area('Area layanan / cakupan jaringan','service_area','Contoh: Sawojajar, Mangliawan, dan sekitarnya.',350)}
+         </div>
+       </section>
+       <section class="settings-group"><div class="settings-group-title"><span class="settings-step">04</span><div><h3>Informasi pembayaran</h3><p>Opsional, untuk mempermudah pencatatan dan penyusunan pesan pembayaran.</p></div></div>
+         <div class="settings-fields">
+           ${input('Nama bank / penyedia pembayaran','bank_name',{placeholder:'Contoh: BRI, BCA, DANA'})}
+           ${input('Nomor rekening / akun pembayaran','bank_account_number',{placeholder:'Nomor rekening atau e-wallet',maxlength:60})}
+           ${input('Atas nama','bank_account_holder',{placeholder:'Nama penerima'})}
+           ${area('Petunjuk pembayaran','payment_instructions','Contoh: Kirim bukti transfer ke WhatsApp admin.',350)}
+         </div>
+       </section>
+       <div class="settings-save"><p>Perubahan tersimpan di akun dan dapat diedit kapan saja.</p><button class="btn primary" type="submit">✓ Simpan perubahan</button></div>
+     </form>
+   </section>
+   <aside class="settings-side">
+     <section class="panel preferences-card"><h2>Tampilan aplikasi</h2><p>Pilih tema yang nyaman digunakan.</p><div class="theme-options"><button class="theme-option ${state.theme==='light'?'chosen':''}" data-theme-set="light"><span>☼</span><b>Terang</b></button><button class="theme-option ${state.theme==='dark'?'chosen':''}" data-theme-set="dark"><span>☾</span><b>Gelap</b></button></div><hr><h2>Keamanan data</h2><p>Informasi profil hanya dapat diakses oleh pemilik akun melalui perlindungan database.</p><span class="security-chip">✓ Perlindungan aktif</span></section>
+     <section class="panel profile-progress"><span class="eyebrow">KELENGKAPAN PROFIL</span><strong>${completed} dari ${essentials.length} informasi utama</strong><div class="profile-progress-track"><span style="width:${completed/essentials.length*100}%"></span></div><p>Lengkapi nama usaha, pemilik, WhatsApp bisnis, alamat, kota, dan area layanan.</p></section>
+   </aside>
+ </div>`;
 }
 function guidePage() {
  const steps=[['01','Siapkan paket internet','Buat daftar paket dan harga bulanan agar mudah dipilih saat menambahkan pelanggan.'],['02','Catat pelanggan','Masukkan nama, nomor WhatsApp, alamat, paket, tarif, dan tanggal jatuh tempo.'],['03','Buat tagihan bulanan','Pilih bulan yang ditagihkan. Sistem membuat satu tagihan untuk setiap pelanggan aktif yang belum memiliki tagihan periode tersebut.'],['04','Catat pembayaran','Tandai tagihan lunas melalui tombol centang atau catat pembayaran dengan metode dan tanggal.'],['05','Kirim pengingat','Pilih pelanggan dan template. Pesan akan dibuka di WhatsApp untuk Anda periksa lalu kirim sendiri.'],['06','Impor dan ekspor data','Unduh CSV untuk cadangan. Impor CSV memakai kolom nama, telepon, alamat, paket, harga_bulanan, jatuh_tempo, status.']];
@@ -208,7 +266,25 @@ async function saveRecord(form) {
  const result=id?await supabase.from(table).update(payload).eq('id',id):await supabase.from(table).insert(payload);
  if(result.error)throw result.error; state.modal=null;toast('Data berhasil disimpan');await refresh();
 }
-async function saveSettings(form) { const v=formObj(form);const {data,error}=await supabase.from('profiles').update({...v,updated_at:new Date().toISOString()}).eq('id',state.user.id).select().single();if(error)throw error;state.profile=data;toast('Pengaturan berhasil disimpan');render(); }
+async function saveSettings(form) {
+ const v=formObj(form);
+ const fields=['owner_name','owner_phone','owner_role','business_name','business_type','business_phone','business_whatsapp','business_email','business_website','business_address','business_village','business_district','business_city','business_province','business_postal_code','service_area','business_description','operating_hours','bank_name','bank_account_number','bank_account_holder','payment_instructions','whatsapp_country_code'];
+ const payload=Object.fromEntries(fields.map(key=>[key,String(v[key]||'').trim()]));
+ if(!payload.business_name)throw new Error('Nama usaha wajib diisi.');
+ if(payload.whatsapp_country_code&&!/^\\d{1,5}$/.test(payload.whatsapp_country_code))throw new Error('Kode negara WhatsApp hanya boleh berisi angka, contohnya 62.');
+ if(payload.business_website&&!/^https?:\\/\\/\\S+$/i.test(payload.business_website))throw new Error('Alamat website harus dimulai dengan https:// atau http://.');
+ payload.whatsapp_country_code=payload.whatsapp_country_code||'62';
+ payload.updated_at=new Date().toISOString();
+ const button=form.querySelector('button[type=submit]');
+ if(button){button.disabled=true;button.textContent='Menyimpan…';}
+ try{
+   const {data,error}=await supabase.from('profiles').update(payload).eq('id',state.user.id).select().single();
+   if(error)throw error;
+   state.profile=data;
+   toast('Profil pengguna dan bisnis berhasil disimpan');
+   render();
+ }finally{if(button?.isConnected){button.disabled=false;button.textContent='✓ Simpan perubahan';}}
+}
 async function deleteRecord(token) {
  const [type,id]=String(token||'').split(':');
  const map={customer:'customers',package:'internet_packages',invoice:'invoices',template:'message_templates'};
