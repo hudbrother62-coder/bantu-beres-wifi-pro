@@ -1,0 +1,22 @@
+-- Enrich the existing owner's profile. Optional fields preserve older accounts and Auth flows.
+alter table public.profiles
+  add column if not exists owner_phone text,
+  add column if not exists owner_role text,
+  add column if not exists business_type text,
+  add column if not exists business_phone text,
+  add column if not exists business_whatsapp text,
+  add column if not exists business_email text,
+  add column if not exists business_website text,
+  add column if not exists business_address text,
+  add column if not exists business_village text,
+  add column if not exists business_district text,
+  add column if not exists business_city text,
+  add column if not exists business_province text,
+  add column if not exists business_postal_code text,
+  add column if not exists service_area text,
+  add column if not exists business_description text,
+  add column if not exists operating_hours text,
+  add column if not exists bank_name text,
+  add column if not exists bank_account_number text,
+  add column if not exists bank_account_holder text,
+  add column if not exists payment_instructions text;
