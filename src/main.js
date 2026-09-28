@@ -47,6 +47,8 @@ function pageContent() {
  return dashboard();
 }
 function dashboard() {
+ const activeCustomers=state.customers.filter(c=>c.status==='active').length;
+ const currentPayments=state.payments.filter(p=>String(p.paid_at).slice(0,7)===today.slice(0,7)).reduce((sum,p)=>sum+Number(p.amount),0);
  const open=state.invoices.filter(i=>i.status!=='paid').reduce((s,i)=>s+Number(i.amount),0);
  const late=state.invoices.filter(i=>i.status!=='paid'&&i.due_date<today).length;
  const latest=[...state.payments].sort((a,b)=>new Date(b.paid_at)-new Date(a.paid_at)).slice(0,5);
@@ -119,7 +121,7 @@ function syncRoute() {
 }
 function render() {
  if (!state.authChecked) { app.innerHTML = loadingView(); return; }
- if (state.user) { app.innerHTML = shell(); return; }
+ if (state.user) { try { app.innerHTML = shell(); } catch (error) { console.error('WiFi Pro render error', error); app.innerHTML = `<main class="loading-screen"><div class="error-recovery"><h2>Halaman belum dapat ditampilkan</h2><p>Terjadi kendala saat memuat dashboard. Data akun Anda tetap tersimpan.</p><button class="btn primary" id="recover-reload">Muat ulang aplikasi</button><button class="btn secondary" id="recover-logout">Keluar akun</button></div></main>`; } return; }
  app.innerHTML = authView();
  const signup = routeName() === 'register';
  const extra = document.querySelector('#signup-extra');
@@ -199,6 +201,10 @@ app.addEventListener('click', async e=>{
  if(e.target.closest('[data-action="send-message"]')){const id=document.querySelector('#message-customer')?.value;const c=state.customers.find(x=>x.id===id);const t=document.querySelector('#message-body')?.value||'';if(!c||!t){toast('Pilih pelanggan dan isi pesan terlebih dahulu.','error');return;}openWhatsApp(c,t);return;}
  if(e.target.closest('.logout')){const {error}=await supabase.auth.signOut();if(error){toast(error.message,'error');return;}clearPrivateState();goTo('login');return;}
  if(e.target.closest('#auth-switch')){goTo(routeName()==='register'?'login':'register');return;}
+});
+app.addEventListener('click',async e=>{
+ if(e.target.closest('#recover-reload')) { window.location.reload(); return; }
+ if(e.target.closest('#recover-logout')) { await supabase.auth.signOut(); clearPrivateState(); goTo('login'); }
 });
 app.addEventListener('submit',async e=>{
  e.preventDefault();const f=e.target;
