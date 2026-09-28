@@ -26,8 +26,11 @@ Project Supabase sudah memiliki skema awal dari `supabase/migrations/20260928073
 npm run build
 ```
 
-## Pengaturan Auth untuk login tanpa email pengguna
+## Login dan pendaftaran berbasis username
 
-Pada Supabase Dashboard > Authentication > Providers > Email, matikan **Confirm email** agar `signUp()` langsung mengembalikan sesi. Ini konfigurasi project Auth (bukan setting PostgreSQL/RLS) dan wajib dilakukan untuk alur username tanpa inbox email. Email internal memakai pola `<username>@wifi-users.bantuberes.com`; subdomain tersebut hanyalah alias akun, bukan email yang perlu dikonfirmasi pelanggan. Jangan nyalakan kembali konfirmasi email selama menggunakan alur ini.
+Pendaftaran melalui Supabase Edge Function `register-owner` (lihat `supabase/functions/register-owner/index.ts`). Fungsi ini menggunakan `auth.admin.createUser({email_confirm:true})` **hanya di server**, menyiapkan profil usaha, memvalidasi data, dan membatasi percobaan dengan tabel `registration_attempts`. Browser hanya menerima respons status kemudian login menggunakan username dan password; tidak ada email konfirmasi yang perlu dikirim. Tidak perlu mematikan fitur Email Confirmation global di Supabase untuk alur ini.
+
+Alamat internal akun: `<username>@wifi-users.bantuberes.com`, bukan inbox yang harus dimiliki pelanggan. Edge Function ini memang menerima permintaan publik (verify_jwt=false), memeriksa asal aplikasi dan publishable key, menerapkan rate limit, dan tidak mengembalikan service-role key ke browser. Data pengguna tetap dipisahkan dengan RLS.
+
 
 Halaman publik: `#/login`, `#/register`. Halaman yang dilindungi: dashboard, pelanggan, paket, tagihan, pembayaran, pesan WhatsApp, pengaturan, dan panduan. Kunci yang dipakai di browser harus hanya publishable key; jangan pernah mengirim service_role/secret key ke klien. RLS pada database tetap menjadi kontrol akses utama meskipun route SPA menampilkan halaman login.
