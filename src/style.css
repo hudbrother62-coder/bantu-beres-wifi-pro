@@ -158,3 +158,28 @@ body{line-height:1.5;-webkit-font-smoothing:antialiased}
 
 /* Customer form · synced package price */
 #customer-monthly-price[readonly]{background:var(--surface2);color:var(--text);font-weight:800;cursor:default}
+
+/* Custom danger confirmation, responsive in light and dark */
+.btn.danger{background:#be344d;color:#fff;border-color:#be344d;box-shadow:0 5px 15px rgba(169,32,64,.16)}
+.btn.danger:hover{background:#a92740;box-shadow:0 8px 18px rgba(169,32,64,.22)}
+.delete-dialog{width:min(450px,100%);overflow:hidden}
+.delete-dialog-body{padding:27px 25px 20px;display:grid;justify-items:start;gap:11px}
+.delete-dialog-body .eyebrow{color:var(--red)}
+.delete-dialog-body h2{font:800 21px/1.3 Manrope,sans-serif;letter-spacing:-.04em;margin:0;color:var(--text)}
+.delete-dialog-body>p{font-size:12px;line-height:1.6;margin:0;color:var(--muted)}
+.delete-dialog-body>p strong{color:var(--text);overflow-wrap:anywhere}
+.delete-icon{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:#fff0f2;border:1px solid #f9ccd3;color:#b52d46;font:800 23px Manrope,sans-serif;margin-bottom:4px}
+.delete-warning{width:100%;display:flex;align-items:flex-start;gap:10px;background:#fff5f5;border:1px solid #fad9de;color:#873448;padding:12px;border-radius:11px;font-size:11px;line-height:1.6;margin-top:5px}
+.delete-warning>span:first-child{font-size:15px;flex:none}
+.delete-warning b{display:block;margin-top:3px;color:#9e283e}
+.delete-dialog-actions{display:flex;justify-content:flex-end;gap:9px;padding:16px 25px 21px;border-top:1px solid var(--border)}
+.delete-dialog-actions .btn{min-width:0}
+:root[data-theme=dark] .delete-icon{background:#462736;border-color:#754154;color:#ffb9c5}
+:root[data-theme=dark] .delete-warning{background:#322330;border-color:#694051;color:#ffd9e1}
+:root[data-theme=dark] .delete-warning b{color:#ffbecb}
+@media(max-width:520px){
+ .delete-dialog{border-radius:18px 18px 12px 12px}
+ .delete-dialog-body{padding:23px 20px 18px}
+ .delete-dialog-actions{padding:13px 20px max(19px,env(safe-area-inset-bottom));display:grid;grid-template-columns:1fr 1fr}
+ .delete-dialog-actions .btn{white-space:normal;height:auto;min-height:44px;padding:8px;font-size:11px;text-align:center}
+}
