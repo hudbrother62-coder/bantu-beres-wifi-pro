@@ -183,3 +183,39 @@ body{line-height:1.5;-webkit-font-smoothing:antialiased}
  .delete-dialog-actions{padding:13px 20px max(19px,env(safe-area-inset-bottom));display:grid;grid-template-columns:1fr 1fr}
  .delete-dialog-actions .btn{white-space:normal;height:auto;min-height:44px;padding:8px;font-size:11px;text-align:center}
 }
+
+/* Expanded owner and business settings */
+.settings-layout{grid-template-columns:minmax(0,1.6fr) minmax(275px,.74fr);gap:18px;align-items:start}
+.expanded-settings{padding:22px 24px}
+.settings-heading{display:flex;align-items:center;gap:13px;padding-bottom:21px;border-bottom:1px solid var(--border)}
+.settings-heading-icon{height:42px;width:42px;flex:none;display:grid;place-items:center;background:color-mix(in srgb,var(--primary) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--primary) 19%,var(--border));border-radius:13px;color:var(--primary);font-size:20px}
+.settings-heading h2{font:800 20px/1.3 Manrope,sans-serif;letter-spacing:-.035em;margin:6px 0}
+.settings-heading p{color:var(--muted);font-size:11px;line-height:1.55;margin:0}
+.settings-form{display:grid;gap:0}
+.settings-group{padding:21px 0 24px;border-bottom:1px solid var(--border)}
+.settings-group-title{display:flex;align-items:flex-start;gap:11px;margin-bottom:18px}
+.settings-step{width:27px;height:27px;display:grid;place-items:center;flex:none;border:1px solid color-mix(in srgb,var(--primary) 20%,var(--border));border-radius:8px;background:color-mix(in srgb,var(--primary) 8%,var(--surface));color:var(--primary);font:800 11px Manrope,sans-serif}
+.settings-group-title h3{font:800 13px Manrope,sans-serif;margin:0 0 5px;color:var(--text)}
+.settings-group-title p{font-size:11px;line-height:1.5;color:var(--muted);margin:0}
+.settings-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px 14px}
+.settings-fields label{min-width:0;display:grid;align-content:start;gap:7px;font-size:11px;font-weight:700;color:var(--text)}
+.settings-fields label.wide{grid-column:1/-1}
+.settings-fields input,.settings-fields textarea{font:500 12px/1.5 'DM Sans',sans-serif;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:10px;outline:none;width:100%;min-width:0;padding:11px 12px;transition:border-color .18s,box-shadow .18s}
+.settings-fields input{height:43px}
+.settings-fields textarea{resize:vertical;min-height:78px}
+.settings-fields input::placeholder,.settings-fields textarea::placeholder{color:var(--muted);opacity:.7}
+.settings-fields input:focus,.settings-fields textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 12%,transparent)}
+.settings-fields input.readonly-field{background:var(--surface2);color:var(--muted);cursor:not-allowed}
+.settings-fields .field-hint{font-size:10px;font-weight:400;color:var(--muted);line-height:1.4}
+.settings-save{display:flex;align-items:center;justify-content:space-between;gap:15px;padding-top:21px}
+.settings-save p{font-size:11px;color:var(--muted);margin:0;max-width:230px;line-height:1.4}
+.settings-save .btn{flex:none}
+.settings-side{display:grid;gap:14px;min-width:0}
+.profile-progress{padding:19px}
+.profile-progress strong{display:block;font:800 15px Manrope,sans-serif;margin:12px 0;color:var(--text)}
+.profile-progress-track{height:7px;border-radius:30px;background:var(--surface2);border:1px solid var(--border);overflow:hidden}
+.profile-progress-track span{height:100%;display:block;background:var(--primary);border-radius:30px;transition:width .3s ease}
+.profile-progress p{font-size:11px;line-height:1.55;color:var(--muted);margin:13px 0 0}
+@media(max-width:1050px){.settings-layout{grid-template-columns:minmax(0,1.45fr) minmax(245px,.7fr)}}
+@media(max-width:760px){.settings-layout{grid-template-columns:1fr}.expanded-settings{padding:19px}.settings-side{grid-template-columns:1fr}}
+@media(max-width:520px){.expanded-settings{padding:17px}.settings-heading h2{font-size:18px}.settings-fields{grid-template-columns:1fr;gap:13px}.settings-save{display:grid;gap:13px}.settings-save .btn{width:100%}.settings-save p{max-width:none}}
