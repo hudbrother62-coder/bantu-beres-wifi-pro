@@ -271,8 +271,8 @@ async function saveSettings(form) {
  const fields=['owner_name','owner_phone','owner_role','business_name','business_type','business_phone','business_whatsapp','business_email','business_website','business_address','business_village','business_district','business_city','business_province','business_postal_code','service_area','business_description','operating_hours','bank_name','bank_account_number','bank_account_holder','payment_instructions','whatsapp_country_code'];
  const payload=Object.fromEntries(fields.map(key=>[key,String(v[key]||'').trim()]));
  if(!payload.business_name)throw new Error('Nama usaha wajib diisi.');
- if(payload.whatsapp_country_code&&!/^\\d{1,5}$/.test(payload.whatsapp_country_code))throw new Error('Kode negara WhatsApp hanya boleh berisi angka, contohnya 62.');
- if(payload.business_website&&!/^https?:\\/\\/\\S+$/i.test(payload.business_website))throw new Error('Alamat website harus dimulai dengan https:// atau http://.');
+ if(payload.whatsapp_country_code&&!/^\d{1,5}$/.test(payload.whatsapp_country_code))throw new Error('Kode negara WhatsApp hanya boleh berisi angka, contohnya 62.');
+ if(payload.business_website&&!/^https?:\/\/\S+$/i.test(payload.business_website))throw new Error('Alamat website harus dimulai dengan https:// atau http://.');
  payload.whatsapp_country_code=payload.whatsapp_country_code||'62';
  payload.updated_at=new Date().toISOString();
  const button=form.querySelector('button[type=submit]');
