@@ -13,10 +13,10 @@ const monthFmt = d => new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'n
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today = new Date().toISOString().slice(0,10);
 const periodNow = `${today.slice(0,7)}-01`;
-const state = { user: null, profile: null, page: 'dashboard', customers: [], packages: [], invoices: [], payments: [], templates: [], search: '', modal: null, theme: localStorage.getItem('wifi-theme') || 'light', loading: false, period: periodNow, authChecked: false };
+const state = { user: null, profile: null, page: 'dashboard', customers: [], packages: [], invoices: [], payments: [], templates: [], search: '', modal: null, theme: localStorage.getItem('wifi-theme') || 'light', loading: false, period: periodNow };
 document.documentElement.dataset.theme = state.theme;
 
-const brand = `<span class="brand-mark"><svg viewBox="0 0 48 52" role="img" aria-label="Logo Bantu Beres"><defs><linearGradient id="brandg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8726a8"/><stop offset="1" stop-color="#1264b5"/></linearGradient></defs><path fill="url(#brandg)" d="M7 3h20c13 0 19 7 19 16 0 6-3 10-8 12 6 2 9 6 9 12 0 9-7 15-19 15H7V3Zm12 9v14h8c5 0 8-2 8-7s-3-7-8-7h-8Zm0 23v14h9c5 0 8-2 8-7s-3-7-8-7h-9Z"/><path d="m15 30 8 7 17-19" fill="none" stroke="white" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+const brand = `<span class="brand-mark"><img src="/bantu-beres-mark.svg" alt="Logo Bantu Beres" /></span>`;
 const nav = [ ['dashboard','Ringkasan','▦'], ['customers','Pelanggan','♙'], ['packages','Paket internet','◉'], ['invoices','Tagihan','▤'], ['payments','Pembayaran','↗'], ['messages','Pesan WhatsApp','◌'] ];
 
 function toast(message, kind='success') { const el=document.createElement('div'); el.className=`toast ${kind}`; el.textContent=message; document.body.append(el); setTimeout(()=>el.remove(),3200); }
@@ -24,7 +24,7 @@ function initials(name='Bantu Beres') { return name.split(/\s+/).slice(0,2).map(
 function loadingView() { return `<main class="loading-screen"><div class="spinner"></div><p>Menyiapkan ruang kerja WiFi Pro…</p></main>`; }
 function authView() {
   if (!supabase) return `<main class="auth-layout"><section class="auth-art"><div class="auth-brand">${brand}<div><b>Bantu Beres</b><span>WiFi Pro</span></div></div><div class="art-copy"><span class="eyebrow">OPERASIONAL WIFI DALAM SATU TEMPAT</span><h1>Pelanggan terdata.<br><span>Tagihan terkendali.</span></h1><p>Rapikan layanan internet Anda: dari data pelanggan sampai pesan pengingat, semua lebih mudah dipantau.</p><div class="art-chips"><span>Data pelanggan</span><span>Tagihan bulanan</span><span>Pesan WhatsApp</span></div></div><div class="art-bottom">Bantu Beres WiFi Pro <span>•</span> Kelola usaha dengan lebih ringan</div></section><section class="auth-side"><div class="auth-mobile-brand">${brand}<b>Bantu Beres WiFi Pro</b></div><div class="auth-card"><span class="eyebrow">MULAI DARI SINI</span><h2>Hubungkan database</h2><p>Konfigurasi Supabase belum terpasang. Tambahkan URL dan publishable key sebagai environment variable Vercel.</p><div class="setup-note"><b>Environment variables</b><code>VITE_SUPABASE_URL</code><code>VITE_SUPABASE_ANON_KEY</code><span>Setelah ditambahkan, build ulang aplikasi.</span></div></div><footer>© ${new Date().getFullYear()} Bantu Beres</footer></section></main>`;
-  return `<main class="auth-layout"><section class="auth-art"><div class="auth-brand">${brand}<div><b>Bantu Beres</b><span>WiFi Pro</span></div></div><div class="art-copy"><span class="eyebrow">OPERASIONAL WIFI DALAM SATU TEMPAT</span><h1>Pelanggan terdata.<br><span>Tagihan terkendali.</span></h1><p>Rapikan layanan internet Anda: dari data pelanggan sampai pesan pengingat, semua lebih mudah dipantau.</p><div class="art-chips"><span>Data pelanggan</span><span>Tagihan bulanan</span><span>Pesan WhatsApp</span></div></div><div class="art-bottom">Bantu Beres WiFi Pro <span>•</span> Kelola usaha dengan lebih ringan</div></section><section class="auth-side"><div class="auth-mobile-brand">${brand}<b>Bantu Beres WiFi Pro</b></div><div class="auth-card"><span class="eyebrow">SELAMAT DATANG</span><h2 id="auth-title">Masuk ke akun</h2><p id="auth-desc">Kelola layanan WiFi Anda dengan lebih rapi.</p><form id="auth-form"><label>Username<input type="text" name="username" required minlength="3" maxlength="32" pattern="[A-Za-z0-9._-]{3,32}" title="Gunakan 3–32 karakter: huruf, angka, titik, garis bawah, atau tanda hubung." placeholder="contoh: kepsek" autocomplete="username"></label><small class="field-note">Masuk dengan username dan kata sandi, tanpa email.</small><label>Kata sandi<input type="password" name="password" required minlength="6" placeholder="Minimal 6 karakter" autocomplete="current-password"></label><div class="auth-extra" id="signup-extra" hidden><label>Nama usaha<input name="business" placeholder="Contoh: WiFi Berkah"></label><label>Nama pemilik<input name="owner" placeholder="Nama Anda"></label></div><button class="btn primary full" id="auth-submit">Masuk</button></form><div class="auth-switch"><span id="auth-switch-text">Belum punya akun?</span> <button type="button" class="text-button" id="auth-switch">Daftar sekarang</button></div><div class="secure-note"><span>●</span> Data usaha Anda terlindungi per akun</div></div><footer>© ${new Date().getFullYear()} Bantu Beres</footer></section></main>`;
+  return `<main class="auth-layout"><section class="auth-art"><div class="auth-brand">${brand}<div><b>Bantu Beres</b><span>WiFi Pro</span></div></div><div class="art-copy"><span class="eyebrow">OPERASIONAL WIFI DALAM SATU TEMPAT</span><h1>Pelanggan terdata.<br><span>Tagihan terkendali.</span></h1><p>Rapikan layanan internet Anda: dari data pelanggan sampai pesan pengingat, semua lebih mudah dipantau.</p><div class="art-chips"><span>Data pelanggan</span><span>Tagihan bulanan</span><span>Pesan WhatsApp</span></div></div><div class="art-bottom">Bantu Beres WiFi Pro <span>•</span> Kelola usaha dengan lebih ringan</div></section><section class="auth-side"><div class="auth-mobile-brand">${brand}<b>Bantu Beres WiFi Pro</b></div><div class="auth-card"><span class="eyebrow">SELAMAT DATANG</span><h2 id="auth-title">Masuk ke akun</h2><p id="auth-desc">Kelola layanan WiFi Anda dengan lebih rapi.</p><form id="auth-form"><label>Email<input type="email" name="email" required placeholder="nama@email.com" autocomplete="email"></label><label>Kata sandi<input type="password" name="password" required minlength="6" placeholder="Minimal 6 karakter" autocomplete="current-password"></label><div class="auth-extra" id="signup-extra" hidden><label>Nama usaha<input name="business" placeholder="Contoh: WiFi Berkah"></label><label>Nama pemilik<input name="owner" placeholder="Nama Anda"></label></div><button class="btn primary full" id="auth-submit">Masuk</button></form><div class="auth-switch"><span id="auth-switch-text">Belum punya akun?</span> <button type="button" class="text-button" id="auth-switch">Daftar sekarang</button></div><div class="secure-note"><span>●</span> Data usaha Anda terlindungi per akun</div></div><footer>© ${new Date().getFullYear()} Bantu Beres</footer></section></main>`;
 }
 
 function statusPill(status) { const map={active:['Aktif','green'],isolated:['Terisolir','amber'],inactive:['Nonaktif','gray'],paid:['Lunas','green'],unpaid:['Belum bayar','red'],partial:['Sebagian','amber']}; const [label,color]=map[status]||[status,'gray']; return `<span class="pill ${color}">${label}</span>`; }
@@ -32,7 +32,7 @@ function shell() {
   const activeCustomers=state.customers.filter(c=>c.status==='active').length;
   const unpaid=state.invoices.filter(i=>i.status!=='paid');
   const currentPayments=state.payments.filter(p=>String(p.paid_at).slice(0,7)===today.slice(0,7)).reduce((a,p)=>a+Number(p.amount),0);
-  return `<div class="app-shell"><aside class="sidebar"><div class="side-brand">${brand}<div><b>Bantu Beres</b><span>WiFi Pro</span></div></div><div class="workspace-card"><span class="workspace-icon">${initials(state.profile?.business_name)}</span><div><b>${esc(state.profile?.business_name||'WiFi Saya')}</b><span>Ruang kerja</span></div><span class="chevron">⌄</span></div><span class="nav-caption">MENU UTAMA</span><nav class="side-nav">${nav.map(([id,label,icon])=>`<button class="nav-item ${state.page===id?'selected':''}" data-page="${id}"><span class="nav-icon">${icon}</span><span>${label}</span>${id==='invoices'&&unpaid.length?`<small>${unpaid.length}</small>`:''}</button>`).join('')}</nav><div class="side-bottom"><button class="nav-item ${state.page==='settings'?'selected':''}" data-page="settings"><span class="nav-icon">⚙</span><span>Pengaturan</span></button><div class="side-help"><div class="help-icon">?</div><b>Perlu bantuan?</b><span>Panduan WiFi Pro</span><button data-page="guide">Lihat panduan <span>→</span></button></div><div class="user-card"><span class="avatar">${initials(state.profile?.owner_name||state.user.email)}</span><div class="user-meta"><b>${esc(state.profile?.owner_name||'Pemilik')}</b><span>${esc(state.user.user_metadata?.username||state.user.email)}</span></div><button class="icon-button logout" title="Keluar" aria-label="Keluar">↪</button></div></div></aside><div class="main-column"><header class="topbar"><button class="icon-button mobile-menu" aria-label="Buka menu">☰</button><div class="breadcrumbs">Bantu Beres <span>/</span> <b>${nav.find(n=>n[0]===state.page)?.[1]|| (state.page==='guide'?'Panduan':'Pengaturan')}</b></div><div class="top-actions"><span class="today-label">${new Intl.DateTimeFormat('id-ID',{weekday:'long',day:'numeric',month:'long'}).format(new Date())}</span><button class="icon-button theme-toggle" title="Ganti tema">${state.theme==='light'?'☾':'☼'}</button><button class="help-top" data-page="guide">Panduan</button></div></header><main class="content">${pageContent()}</main></div><nav class="mobile-nav">${nav.filter(n=>['dashboard','customers','invoices','payments','messages'].includes(n[0])).map(([id,label,icon])=>`<button class="${state.page===id?'selected':''}" data-page="${id}"><span>${icon}</span><small>${label==='Pelanggan'?'Data':label==='Pembayaran'?'Bayar':label==='Pesan WhatsApp'?'Pesan':label==='Ringkasan'?'Beranda':'Tagihan'}</small></button>`).join('')}<button data-page="settings" class="${state.page==='settings'?'selected':''}"><span>⚙</span><small>Pengaturan</small></button></nav></div>${state.modal?modalView():''}`;
+  return `<div class="app-shell"><aside class="sidebar"><div class="side-brand">${brand}<div><b>Bantu Beres</b><span>WiFi Pro</span></div></div><div class="workspace-card"><span class="workspace-icon">${initials(state.profile?.business_name)}</span><div><b>${esc(state.profile?.business_name||'WiFi Saya')}</b><span>Ruang kerja</span></div><span class="chevron">⌄</span></div><span class="nav-caption">MENU UTAMA</span><nav class="side-nav">${nav.map(([id,label,icon])=>`<button class="nav-item ${state.page===id?'selected':''}" data-page="${id}"><span class="nav-icon">${icon}</span><span>${label}</span>${id==='invoices'&&unpaid.length?`<small>${unpaid.length}</small>`:''}</button>`).join('')}</nav><div class="side-bottom"><button class="nav-item ${state.page==='settings'?'selected':''}" data-page="settings"><span class="nav-icon">⚙</span><span>Pengaturan</span></button><div class="side-help"><div class="help-icon">?</div><b>Perlu bantuan?</b><span>Panduan WiFi Pro</span><button data-page="guide">Lihat panduan <span>→</span></button></div><div class="user-card"><span class="avatar">${initials(state.profile?.owner_name||state.user.email)}</span><div class="user-meta"><b>${esc(state.profile?.owner_name||'Pemilik')}</b><span>${esc(state.user.email)}</span></div><button class="icon-button logout" title="Keluar" aria-label="Keluar">↪</button></div></div></aside><div class="main-column"><header class="topbar"><button class="icon-button mobile-menu" aria-label="Buka menu">☰</button><div class="breadcrumbs">Bantu Beres <span>/</span> <b>${nav.find(n=>n[0]===state.page)?.[1]|| (state.page==='guide'?'Panduan':'Pengaturan')}</b></div><div class="top-actions"><span class="today-label">${new Intl.DateTimeFormat('id-ID',{weekday:'long',day:'numeric',month:'long'}).format(new Date())}</span><button class="icon-button theme-toggle" title="Ganti tema">${state.theme==='light'?'☾':'☼'}</button><button class="help-top" data-page="guide">Panduan</button></div></header><main class="content">${pageContent()}</main></div><nav class="mobile-nav">${nav.filter(n=>['dashboard','customers','invoices','payments','messages'].includes(n[0])).map(([id,label,icon])=>`<button class="${state.page===id?'selected':''}" data-page="${id}"><span>${icon}</span><small>${label==='Pelanggan'?'Data':label==='Pembayaran'?'Bayar':label==='Pesan WhatsApp'?'Pesan':label==='Ringkasan'?'Beranda':'Tagihan'}</small></button>`).join('')}<button data-page="settings" class="${state.page==='settings'?'selected':''}"><span>⚙</span><small>Pengaturan</small></button></nav></div>${state.modal?modalView():''}`;
 }
 function pageHead(kicker,title,description,action='') { return `<div class="page-head"><div><span class="eyebrow">${kicker}</span><h1>${title}</h1><p>${description}</p></div>${action}</div>`; }
 function pageContent() {
@@ -47,8 +47,6 @@ function pageContent() {
  return dashboard();
 }
 function dashboard() {
- const activeCustomers=state.customers.filter(c=>c.status==='active').length;
- const currentPayments=state.payments.filter(p=>String(p.paid_at).slice(0,7)===today.slice(0,7)).reduce((sum,p)=>sum+Number(p.amount),0);
  const open=state.invoices.filter(i=>i.status!=='paid').reduce((s,i)=>s+Number(i.amount),0);
  const late=state.invoices.filter(i=>i.status!=='paid'&&i.due_date<today).length;
  const latest=[...state.payments].sort((a,b)=>new Date(b.paid_at)-new Date(a.paid_at)).slice(0,5);
@@ -75,7 +73,7 @@ function messagePage() {
  return `${pageHead('KOMUNIKASI','Pesan WhatsApp','Pilih pelanggan, siapkan pesan, lalu kirim langsung melalui WhatsApp.',`<button class="btn primary" data-modal="template">＋ Buat template</button>`)}<div class="message-layout"><section class="panel message-compose"><div class="panel-head"><div><h2>Kirim pesan ke pelanggan</h2><p>Pesan terbuka di WhatsApp agar Anda bisa memeriksanya sebelum dikirim.</p></div><span class="wa-badge">WA</span></div><label>Pilih pelanggan<select id="message-customer"><option value="">Pilih pelanggan…</option>${state.customers.filter(c=>c.phone).map(c=>`<option value="${c.id}">${esc(c.full_name)} · ${esc(c.phone)}</option>`).join('')}</select></label><label>Gunakan template<select id="message-template"><option value="">Tulis pesan sendiri</option>${state.templates.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('')}</select></label><label>Isi pesan<textarea id="message-body" rows="6" placeholder="Halo {nama}, kami mengingatkan bahwa…"></textarea><small class="field-hint">Variabel tersedia: {nama}, {usaha}, {paket}, {tagihan}</small></label><button class="btn whatsapp full" data-action="send-message">Buka WhatsApp ↗</button><div class="send-note">WhatsApp akan terbuka dengan pesan terisi. Tekan kirim di aplikasi WhatsApp Anda.</div></section><section class="panel templates-panel"><div class="panel-head"><div><h2>Template pesan</h2><p>Simpan pesan yang sering digunakan.</p></div></div>${state.templates.length?state.templates.map(t=>`<article class="template-card"><div><span class="template-type">${esc(t.category)}</span><b>${esc(t.title)}</b></div><p>${esc(t.message)}</p><div><button class="text-button" data-edit="template:${t.id}">Edit</button><button class="text-button danger-text" data-delete="template:${t.id}">Hapus</button></div></article>`).join(''):`<div class="empty-state compact"><span class="empty-icon">◌</span><b>Template belum tersedia</b><p>Buat template pengingat agar mengirim pesan lebih praktis.</p><button class="btn secondary small" data-modal="template">＋ Tambah template</button></div>`}</section></div>`;
 }
 function settingsPage() {
- return `${pageHead('PREFERENSI','Pengaturan usaha','Atur identitas usaha yang digunakan pada dashboard dan pesan pelanggan.','')}<div class="settings-layout"><section class="panel settings-panel"><div class="panel-head"><div><h2>Profil usaha</h2><p>Informasi ini hanya terlihat di akun Anda.</p></div><span class="settings-symbol">⚙</span></div><form id="settings-form" class="form-grid"><label>Nama usaha<input name="business_name" required value="${esc(state.profile?.business_name||'')}"></label><label>Nama pemilik<input name="owner_name" value="${esc(state.profile?.owner_name||'')}"></label><label>Kode negara WhatsApp<input name="whatsapp_country_code" value="${esc(state.profile?.whatsapp_country_code||'62')}" placeholder="62"><small class="field-hint">Untuk nomor Indonesia gunakan 62.</small></label><label>Akun login<input value="${esc(state.user.user_metadata?.username||state.user.email)}" disabled></label><div class="form-actions"><button class="btn primary">Simpan pengaturan</button></div></form></section><section class="panel preferences-card"><h2>Tampilan aplikasi</h2><p>Pilih tema yang nyaman digunakan.</p><div class="theme-options"><button class="theme-option ${state.theme==='light'?'chosen':''}" data-theme-set="light"><span>☼</span><b>Terang</b></button><button class="theme-option ${state.theme==='dark'?'chosen':''}" data-theme-set="dark"><span>☾</span><b>Gelap</b></button></div><hr><h2>Keamanan data</h2><p>Setiap akun hanya dapat mengakses data usaha miliknya sendiri.</p><span class="security-chip">✓ Perlindungan aktif</span></section></div>`;
+ return `${pageHead('PREFERENSI','Pengaturan usaha','Atur identitas usaha yang digunakan pada dashboard dan pesan pelanggan.','')}<div class="settings-layout"><section class="panel settings-panel"><div class="panel-head"><div><h2>Profil usaha</h2><p>Informasi ini hanya terlihat di akun Anda.</p></div><span class="settings-symbol">⚙</span></div><form id="settings-form" class="form-grid"><label>Nama usaha<input name="business_name" required value="${esc(state.profile?.business_name||'')}"></label><label>Nama pemilik<input name="owner_name" value="${esc(state.profile?.owner_name||'')}"></label><label>Kode negara WhatsApp<input name="whatsapp_country_code" value="${esc(state.profile?.whatsapp_country_code||'62')}" placeholder="62"><small class="field-hint">Untuk nomor Indonesia gunakan 62.</small></label><label>Email akun<input value="${esc(state.user.email)}" disabled></label><div class="form-actions"><button class="btn primary">Simpan pengaturan</button></div></form></section><section class="panel preferences-card"><h2>Tampilan aplikasi</h2><p>Pilih tema yang nyaman digunakan.</p><div class="theme-options"><button class="theme-option ${state.theme==='light'?'chosen':''}" data-theme-set="light"><span>☼</span><b>Terang</b></button><button class="theme-option ${state.theme==='dark'?'chosen':''}" data-theme-set="dark"><span>☾</span><b>Gelap</b></button></div><hr><h2>Keamanan data</h2><p>Setiap akun hanya dapat mengakses data usaha miliknya sendiri.</p><span class="security-chip">✓ Perlindungan aktif</span></section></div>`;
 }
 function guidePage() {
  const steps=[['01','Siapkan paket internet','Buat daftar paket dan harga bulanan agar mudah dipilih saat menambahkan pelanggan.'],['02','Catat pelanggan','Masukkan nama, nomor WhatsApp, alamat, paket, tarif, dan tanggal jatuh tempo.'],['03','Buat tagihan bulanan','Pilih bulan yang ditagihkan. Sistem membuat satu tagihan untuk setiap pelanggan aktif yang belum memiliki tagihan periode tersebut.'],['04','Catat pembayaran','Tandai tagihan lunas melalui tombol centang atau catat pembayaran dengan metode dan tanggal.'],['05','Kirim pengingat','Pilih pelanggan dan template. Pesan akan dibuka di WhatsApp untuk Anda periksa lalu kirim sendiri.'],['06','Impor dan ekspor data','Unduh CSV untuk cadangan. Impor CSV memakai kolom nama, telepon, alamat, paket, harga_bulanan, jatuh_tempo, status.']];
@@ -91,65 +89,20 @@ function modalView() {
  return `<div class="modal-backdrop" data-close-modal><section class="modal-card" role="dialog" aria-modal="true"><header><div><span class="eyebrow">BANTU BERES WIFI PRO</span><h2>${title}</h2></div><button class="icon-button" data-close-modal aria-label="Tutup">×</button></header><form id="modal-form" data-type="${m.type}" data-id="${m.data?.id||''}"><div class="modal-fields">${fields}</div><footer><button type="button" class="btn secondary" data-close-modal>Batal</button><button class="btn primary">${submit}</button></footer></form></section></div>`;
 }
 
-
-const protectedPages = new Set(['dashboard','customers','packages','invoices','payments','messages','settings','guide']);
-const publicPages = new Set(['login','register']);
-let intendedPage = 'dashboard';
-function routeName() {
- const name = decodeURIComponent((window.location.hash || '').replace(/^#\/?/, '').split('?')[0]).replace(/^\//, '');
- return publicPages.has(name) || protectedPages.has(name) ? name : (state.user ? 'dashboard' : 'login');
-}
-function goTo(page) {
- window.location.hash = '/'+page;
- syncRoute();
-}
-function syncRoute() {
- if (!state.authChecked) { app.innerHTML = loadingView(); return; }
- let route = routeName();
- if (state.user) {
-  if (publicPages.has(route)) {
-   route = 'dashboard';
-   window.history.replaceState(null, '', '#/dashboard');
-  }
-  state.page = route;
- } else if (!publicPages.has(route)) {
-  intendedPage = route;
-  route = 'login';
-  window.history.replaceState(null, '', '#/login');
- }
- render();
-}
-function render() {
- if (!state.authChecked) { app.innerHTML = loadingView(); return; }
- if (state.user) { try { app.innerHTML = shell(); } catch (error) { console.error('WiFi Pro render error', error); app.innerHTML = `<main class="loading-screen"><div class="error-recovery"><h2>Halaman belum dapat ditampilkan</h2><p>Terjadi kendala saat memuat dashboard. Data akun Anda tetap tersimpan.</p><button class="btn primary" id="recover-reload">Muat ulang aplikasi</button><button class="btn secondary" id="recover-logout">Keluar akun</button></div></main>`; } return; }
- app.innerHTML = authView();
- const signup = routeName() === 'register';
- const extra = document.querySelector('#signup-extra');
- if (!extra) return;
- extra.hidden = !signup;
- document.querySelector('#auth-title').textContent = signup ? 'Buat akun WiFi Pro' : 'Masuk ke akun';
- document.querySelector('#auth-desc').textContent = signup ? 'Daftarkan usaha Anda untuk mulai mengelola pelanggan.' : 'Kelola layanan WiFi Anda dengan lebih rapi.';
- document.querySelector('#auth-submit').textContent = signup ? 'Daftar akun' : 'Masuk';
- document.querySelector('#auth-switch-text').textContent = signup ? 'Sudah punya akun?' : 'Belum punya akun?';
- document.querySelector('#auth-switch').textContent = signup ? 'Masuk' : 'Daftar sekarang';
- document.querySelector('[name=password]').autocomplete = signup ? 'new-password' : 'current-password';
-}
-window.addEventListener('hashchange', syncRoute);
+function render() { app.innerHTML=state.user?shell():authView(); }
 async function loadData() {
  state.loading=true; render();
  const uid=state.user.id;
  try {
   let {data:profile}=await supabase.from('profiles').select('*').eq('id',uid).maybeSingle();
   if(!profile) { const meta=state.user.user_metadata||{}; const {data,error}=await supabase.from('profiles').insert({id:uid,business_name:meta.business_name||'WiFi Saya',owner_name:meta.owner_name||null}).select().single(); if(error) throw error; profile=data; }
-  if (state.user?.id !== uid) return;
   state.profile=profile;
   const names=['customers','internet_packages','invoices','payments','message_templates'];
   const results=await Promise.all(names.map(n=>supabase.from(n).select('*').order(n==='payments'?'paid_at':'created_at',{ascending:false}).limit(1500)));
-  if (state.user?.id !== uid) return;
   results.forEach((r,i)=>{if(r.error)throw r.error;state[{customers:'customers',internet_packages:'packages',invoices:'invoices',payments:'payments',message_templates:'templates'}[names[i]]]=r.data||[];});
   if(!state.templates.length){const defaults=[{title:'Pengingat tagihan',category:'tagihan',message:'Halo {nama}, kami mengingatkan tagihan layanan internet dari {usaha} sebesar {tagihan}. Silakan konfirmasi setelah melakukan pembayaran. Terima kasih.'},{title:'Informasi layanan',category:'informasi',message:'Halo {nama}, kami dari {usaha} ingin menyampaikan informasi terkait layanan internet paket {paket} Anda. Terima kasih.'},{title:'Informasi gangguan',category:'gangguan',message:'Halo {nama}, saat ini kami sedang menangani kendala jaringan di area Anda. Mohon maaf atas ketidaknyamanannya. Kami akan memberi kabar setelah layanan kembali normal.'}].map(x=>({...x,user_id:uid}));const {data,error}=await supabase.from('message_templates').insert(defaults).select();if(error)throw error;state.templates=data||[];}
  } catch(e) { toast(e.message||'Data belum berhasil dimuat. Muat ulang untuk mencoba lagi.','error'); }
- state.loading=false; if (state.user?.id === uid) render();
+ state.loading=false; render();
 }
 async function refresh() { await loadData(); }
 function formObj(form) { return Object.fromEntries(new FormData(form).entries()); }
@@ -185,7 +138,7 @@ function parseCSV(text){const rows=[];let row=[],cell='',q=false;for(let i=0;i<t
 async function importCSV(file){try{const items=parseCSV(await file.text());const p=state.profile;const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replaceAll(' ','_');const rows=[];for(const raw of items){const r=Object.fromEntries(Object.entries(raw).map(([k,v])=>[norm(k),v]));const name=r.nama||r.nama_lengkap||r.full_name;if(!name)continue;const pk=state.packages.find(x=>x.name.toLowerCase()===(r.paket||'').toLowerCase());rows.push({user_id:state.user.id,full_name:name,phone:r.telepon||r.nomor_wa||r.phone||'',address:r.alamat||r.address||'',package_id:pk?.id||null,monthly_price:Number(String(r.harga_bulanan||r.harga||0).replace(/\D/g,'')),due_day:Math.min(31,Math.max(1,Number(r.jatuh_tempo||r.tanggal_jatuh_tempo||10))),status:['active','isolated','inactive'].includes(r.status)?r.status:'active',started_at:r.mulai||today,notes:r.catatan||null});}if(!rows.length){toast('Tidak menemukan baris data dengan kolom nama.','error');return;}const {error}=await supabase.from('customers').insert(rows);if(error)throw error;toast(`${rows.length} pelanggan berhasil diimpor`);await refresh();}catch(e){toast(e.message||'Impor CSV gagal','error');}}
 
 app.addEventListener('click', async e=>{
- const page=e.target.closest('[data-page]');if(page){if(!state.user)return;state.search='';goTo(page.dataset.page);return;}
+ const page=e.target.closest('[data-page]');if(page){state.page=page.dataset.page;state.search='';render();return;}
  if(e.target.closest('.mobile-menu')){document.querySelector('.sidebar')?.classList.toggle('mobile-open');return;}
  if(e.target.closest('.theme-toggle')){state.theme=state.theme==='light'?'dark':'light';localStorage.setItem('wifi-theme',state.theme);document.documentElement.dataset.theme=state.theme;render();return;}
  const theme=e.target.closest('[data-theme-set]');if(theme){state.theme=theme.dataset.themeSet;localStorage.setItem('wifi-theme',state.theme);document.documentElement.dataset.theme=state.theme;render();return;}
@@ -199,16 +152,12 @@ app.addEventListener('click', async e=>{
  const mc=e.target.closest('[data-message-customer]');if(mc){const c=state.customers.find(x=>x.id===mc.dataset.messageCustomer);openWhatsApp(c,`Halo ${c.full_name}, kami dari ${state.profile?.business_name||'WiFi kami'}. Ada informasi terkait layanan internet Anda. Terima kasih.`);return;}
  const pi=e.target.closest('[data-pay-invoice]');if(pi){state.modal={type:'payment',invoice:pi.dataset.payInvoice};render();setTimeout(()=>{const i=state.invoices.find(x=>x.id===pi.dataset.payInvoice);const c=document.querySelector('[name=customer_id]');const inv=document.querySelector('[name=invoice_id]');if(i&&c&&inv){c.value=i.customer_id;inv.value=i.id;const amt=document.querySelector('[name=amount]');if(amt)amt.value=i.amount;}},0);return;}
  if(e.target.closest('[data-action="send-message"]')){const id=document.querySelector('#message-customer')?.value;const c=state.customers.find(x=>x.id===id);const t=document.querySelector('#message-body')?.value||'';if(!c||!t){toast('Pilih pelanggan dan isi pesan terlebih dahulu.','error');return;}openWhatsApp(c,t);return;}
- if(e.target.closest('.logout')){const {error}=await supabase.auth.signOut();if(error){toast(error.message,'error');return;}clearPrivateState();goTo('login');return;}
- if(e.target.closest('#auth-switch')){goTo(routeName()==='register'?'login':'register');return;}
-});
-app.addEventListener('click',async e=>{
- if(e.target.closest('#recover-reload')) { window.location.reload(); return; }
- if(e.target.closest('#recover-logout')) { await supabase.auth.signOut(); clearPrivateState(); goTo('login'); }
+ if(e.target.closest('.logout')){await supabase.auth.signOut();state.user=null;state.profile=null;render();return;}
+ if(e.target.closest('#auth-switch')){const form=document.querySelector('#auth-form');const signupExtra=document.querySelector('#signup-extra');const is=signupExtra.hidden;signupExtra.hidden=!is;document.querySelector('#auth-title').textContent=is?'Buat akun WiFi Pro':'Masuk ke akun';document.querySelector('#auth-desc').textContent=is?'Daftarkan usaha Anda untuk mulai mengelola pelanggan.':'Kelola layanan WiFi Anda dengan lebih rapi.';document.querySelector('#auth-submit').textContent=is?'Daftar akun':'Masuk';document.querySelector('#auth-switch-text').textContent=is?'Sudah punya akun?':'Belum punya akun?';e.target.textContent=is?'Masuk':'Daftar sekarang';const pw=form.querySelector('[name=password]');pw.autocomplete=is?'new-password':'current-password';return;}
 });
 app.addEventListener('submit',async e=>{
  e.preventDefault();const f=e.target;
- if(f.id==='auth-form'){const fd=new FormData(f),identifier=String(fd.get('username')||'').trim().toLowerCase(),password=fd.get('password'),signup=!document.querySelector('#signup-extra').hidden;const btn=document.querySelector('#auth-submit');btn.disabled=true;btn.textContent='Memproses…';try{if(signup&&!/^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/.test(identifier))throw new Error('Username harus 3–32 karakter dan hanya memakai huruf, angka, titik, garis bawah, atau tanda hubung.');const email=signup?`${identifier}@wifi-users.bantuberes.com`:(identifier.includes('@')?identifier:`${identifier}@wifi-users.bantuberes.com`);if(signup){const {data:created,error:registerError}=await supabase.functions.invoke('register-owner',{body:{username:identifier,password:String(password),businessName:String(fd.get('business')||'').trim(),ownerName:String(fd.get('owner')||'').trim()}});if(registerError||!created?.ok){let detail=created?.error||'';if(!detail&&registerError){try{detail=String((await registerError.context?.json?.())?.error||'')}catch{/* Keep a safe fallback. */}}throw new Error(detail||'Pendaftaran belum berhasil. Silakan coba lagi.');}const {data:loggedIn,error:loginError}=await supabase.auth.signInWithPassword({email,password:String(password)});if(loginError||!loggedIn.user)throw new Error('Akun berhasil dibuat. Silakan masuk menggunakan username dan kata sandi yang sama.');state.user=loggedIn.user;goTo(intendedPage);await loadData();}else{const {data,error}=await supabase.auth.signInWithPassword({email,password});if(error)throw error;state.user=data.user;goTo(intendedPage);await loadData();}}catch(err){const message=String(err?.message||'');toast(message||'Tidak dapat memproses akun.','error');}finally{if(btn){btn.disabled=false;btn.textContent=signup?'Daftar akun':'Masuk';}}return;}
+ if(f.id==='auth-form'){const fd=new FormData(f),email=fd.get('email'),password=fd.get('password'),signup=!document.querySelector('#signup-extra').hidden;const btn=document.querySelector('#auth-submit');btn.disabled=true;btn.textContent='Memproses…';try{if(signup){const {data,error}=await supabase.auth.signUp({email,password,options:{data:{business_name:fd.get('business'),owner_name:fd.get('owner')}}});if(error)throw error;if(data.session){state.user=data.user;await loadData();}else toast('Pendaftaran berhasil. Periksa email untuk konfirmasi akun.');}else{const {data,error}=await supabase.auth.signInWithPassword({email,password});if(error)throw error;state.user=data.user;await loadData();}}catch(err){toast(err.message||'Tidak dapat memproses akun.','error');}finally{if(btn){btn.disabled=false;btn.textContent=signup?'Daftar akun':'Masuk';}}return;}
  if(f.id==='modal-form'){const b=f.querySelector('button[type=submit],button:not([type])');if(b){b.disabled=true;b.textContent='Menyimpan…';}try{await saveRecord(f);}catch(err){toast(err.message||'Tidak dapat menyimpan data.','error');if(b){b.disabled=false;b.textContent='Simpan';}}return;}
  if(f.id==='settings-form'){try{await saveSettings(f);}catch(err){toast(err.message||'Tidak dapat menyimpan pengaturan.','error');}return;}
 });
@@ -220,39 +169,11 @@ app.addEventListener('change',async e=>{
  if(e.target.id==='payment-invoice'){const opt=e.target.selectedOptions[0], customer=document.querySelector('#payment-customer'),amount=document.querySelector('[name=amount]');if(opt?.dataset.customer&&customer)customer.value=opt.dataset.customer;if(opt?.dataset.amount&&amount)amount.value=opt.dataset.amount;}
 });
 
-function clearPrivateState() {
- state.user=null; state.profile=null; state.customers=[]; state.packages=[];
- state.invoices=[]; state.payments=[]; state.templates=[]; state.modal=null;
- state.search=''; state.authChecked=true;
-}
 async function boot(){
- if (!supabase) { state.authChecked=true; syncRoute(); return; }
- const {data, error} = await supabase.auth.getUser();
- state.authChecked = true;
- if (!error && data.user) {
-  state.user = data.user;
-  syncRoute();
-  await loadData();
- } else {
-  clearPrivateState();
-  syncRoute();
- }
- supabase.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_OUT') {
-   clearPrivateState();
-   goTo('login');
-  } else if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user && (!state.user || state.user.id !== session.user.id)) {
-   // Supabase warns against awaiting another Auth API inside this callback.
-   setTimeout(async () => {
-    const {data: verified, error: verifyError} = await supabase.auth.getUser();
-    if (!verifyError && verified.user && !state.user) {
-     state.user = verified.user;
-     state.authChecked = true;
-     goTo(intendedPage);
-     await loadData();
-    }
-   }, 0);
-  }
- });
+ if(!supabase){render();return;}
+ render();
+ const {data:{session}}=await supabase.auth.getSession();
+ if(session){state.user=session.user;await loadData();}
+ supabase.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'){state.user=null;state.profile=null;state.customers=[];state.packages=[];state.invoices=[];state.payments=[];state.templates=[];render();}});
 }
 boot();
