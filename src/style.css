@@ -219,3 +219,38 @@ body{line-height:1.5;-webkit-font-smoothing:antialiased}
 @media(max-width:1050px){.settings-layout{grid-template-columns:minmax(0,1.45fr) minmax(245px,.7fr)}}
 @media(max-width:760px){.settings-layout{grid-template-columns:1fr}.expanded-settings{padding:19px}.settings-side{grid-template-columns:1fr}}
 @media(max-width:520px){.expanded-settings{padding:17px}.settings-heading h2{font-size:18px}.settings-fields{grid-template-columns:1fr;gap:13px}.settings-save{display:grid;gap:13px}.settings-save .btn{width:100%}.settings-save p{max-width:none}}
+
+
+/* Customer CSV and Excel import/export controls */
+.customer-transfer-toolbar{align-items:flex-start;flex-wrap:wrap;gap:13px}
+.customer-transfer-toolbar .searchbox{max-width:270px;flex:0 1 270px}
+.transfer-actions{display:flex!important;flex:1;justify-content:flex-end;flex-wrap:wrap;gap:7px;min-width:0}
+.transfer-actions .btn{height:36px;font-size:11px;padding:0 11px;white-space:nowrap}
+.transfer-actions .file-button{display:inline-flex;cursor:pointer}
+.transfer-actions .file-button input{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none}
+.transfer-help{margin:-4px 0 15px;padding:10px 13px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;line-height:1.55;border-radius:10px}
+.import-preview-dialog{width:min(590px,100%)}
+.import-preview-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.import-preview-stats>div{border:1px solid var(--border);background:var(--surface2);border-radius:10px;padding:10px;display:grid;gap:4px}
+.import-preview-stats strong{font:800 18px Manrope,sans-serif;color:var(--text)}
+.import-preview-stats span{font-size:10px;color:var(--muted)}
+.import-preview-stats .has-errors strong{color:var(--red)}
+.import-error-list{padding:12px 13px;border-radius:10px;background:#fff2f2;border:1px solid #f4c4ca;color:#9f3347;font-size:11px;line-height:1.55}
+.import-error-list p{margin:6px 0;overflow-wrap:anywhere}
+.import-sample{border:1px solid var(--border);border-radius:11px;overflow:hidden;padding:11px 13px}
+.import-sample>b{font-size:11px;display:block;margin-bottom:8px}
+.import-sample>div{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);font-size:11px}
+.import-sample span{min-width:0;overflow-wrap:anywhere}
+.import-sample small{display:block;color:var(--muted);font-size:10px;margin-top:2px}
+.import-sample strong{white-space:nowrap;font-size:11px}
+.import-preview-actions{display:flex;justify-content:flex-end;gap:9px;padding:15px 21px;border-top:1px solid var(--border)}
+:root[data-theme=dark] .import-error-list{background:#382430;border-color:#784252;color:#ffc9d3}
+@media(max-width:760px){
+ .customer-transfer-toolbar .searchbox{flex:1 1 100%;max-width:none}
+ .transfer-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
+ .transfer-actions .btn{width:100%;height:37px;font-size:10px;white-space:normal;line-height:1.2}
+ .transfer-help{font-size:10px}
+ .import-preview-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .import-preview-actions{padding:13px 16px;display:grid;grid-template-columns:1fr 1fr}
+ .import-preview-actions .btn{height:auto;min-height:42px;white-space:normal}
+}
