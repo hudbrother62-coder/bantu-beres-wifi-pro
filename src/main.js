@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import './style.css';
+import { downloadCustomerTemplate, exportCustomerData, readCustomerFile, validateCustomerRows } from './customer-transfer.js';
 
 const cfg = {
   url: import.meta.env.VITE_SUPABASE_URL || 'https://ypekuhwyjvyyzvedncqh.supabase.co',
@@ -14,6 +15,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const today = new Date().toISOString().slice(0,10);
 const periodNow = `${today.slice(0,7)}-01`;
 const state = { user: null, profile: null, page: 'dashboard', customers: [], packages: [], invoices: [], payments: [], templates: [], search: '', modal: null, theme: localStorage.getItem('wifi-theme') || 'light', loading: false, period: periodNow, authChecked: false };
+state.importDraft=null;
 document.documentElement.dataset.theme = state.theme;
 
 const brand = `<span class="brand-mark"><img src="/bantu-beres-icon.svg" alt="Logo Bantu Beres" width="46" height="52" /></span>`;
@@ -55,7 +57,19 @@ function dashboard() {
  const due=state.invoices.filter(i=>i.status!=='paid').sort((a,b)=>a.due_date.localeCompare(b.due_date)).slice(0,5);
  return `${pageHead('RINGKASAN USAHA',`Halo, ${esc((state.profile?.owner_name||'Teman').split(' ')[0])} 👋`,`Ini ringkasan layanan WiFi Anda hari ini.`,`<button class="btn primary" data-action="generate-invoices">＋ Buat tagihan bulanan</button>`)}<div class="welcome-strip"><div class="welcome-mark">${brand}</div><div><b>${esc(state.profile?.business_name||'WiFi Saya')}</b><span>Pantau pelanggan, pembayaran, dan layanan dari satu tempat.</span></div><button class="text-button" data-page="settings">Atur profil usaha →</button></div><section class="stats-grid"><article class="stat-card"><div class="stat-top"><span>Total pelanggan aktif</span><span class="stat-icon purple">♙</span></div><strong>${activeCustomers}</strong><small>dari ${state.customers.length} pelanggan terdata</small></article><article class="stat-card"><div class="stat-top"><span>Pemasukan bulan ini</span><span class="stat-icon blue">↗</span></div><strong>${money(currentPayments)}</strong><small>Pembayaran tercatat bulan ini</small></article><article class="stat-card"><div class="stat-top"><span>Tagihan belum lunas</span><span class="stat-icon amber">▤</span></div><strong>${money(open)}</strong><small>${state.invoices.filter(i=>i.status!=='paid').length} tagihan menunggu pembayaran</small></article><article class="stat-card"><div class="stat-top"><span>Tagihan terlambat</span><span class="stat-icon red">◷</span></div><strong>${late}</strong><small>Perlu tindak lanjut pelanggan</small></article></section><div class="dashboard-grid"><section class="panel"><div class="panel-head"><div><h2>Tagihan perlu ditindaklanjuti</h2><p>Prioritaskan tagihan yang jatuh tempo lebih dulu.</p></div><button class="text-button" data-page="invoices">Semua tagihan →</button></div>${due.length?`<div class="table-wrap"><table><thead><tr><th>Pelanggan</th><th>Jatuh tempo</th><th>Jumlah</th><th>Status</th><th></th></tr></thead><tbody>${due.map(i=>{const c=state.customers.find(x=>x.id===i.customer_id);return `<tr><td><b>${esc(c?.full_name||'Pelanggan')}</b><small>${esc(c?.phone||'')}</small></td><td>${dateFmt(i.due_date)}</td><td>${money(i.amount)}</td><td>${statusPill(i.status)}</td><td><button class="mini-action" data-message-invoice="${i.id}" title="Kirim pengingat WhatsApp">↗</button></td></tr>`}).join('')}</tbody></table></div>`:`<div class="empty-state"><span class="empty-icon">✓</span><b>Belum ada tagihan tertunggak</b><p>Tagihan yang perlu ditindaklanjuti muncul di sini.</p></div>`}</section><section class="panel"><div class="panel-head"><div><h2>Pembayaran terbaru</h2><p>Aktivitas pembayaran terakhir.</p></div><button class="text-button" data-page="payments">Lihat semua →</button></div>${latest.length?`<div class="activity-list">${latest.map(p=>{const c=state.customers.find(x=>x.id===p.customer_id);return `<div class="activity-row"><span class="activity-check">✓</span><div><b>${esc(c?.full_name||'Pelanggan')}</b><span>${dateFmt(String(p.paid_at).slice(0,10))} · ${esc(p.method||'Tunai')}</span></div><strong>${money(p.amount)}</strong></div>`}).join('')}</div>`:`<div class="empty-state compact"><span class="empty-icon">↗</span><b>Belum ada pembayaran</b><p>Catat pembayaran pertama Anda.</p><button class="btn secondary small" data-modal="payment">Catat pembayaran</button></div>`}</section></div><div class="quick-row"><button class="quick-card" data-modal="customer"><span class="quick-icon purple">＋</span><span><b>Tambah pelanggan</b><small>Catat pelanggan baru</small></span><span class="quick-arrow">→</span></button><button class="quick-card" data-modal="package"><span class="quick-icon blue">◉</span><span><b>Tambah paket</b><small>Atur pilihan layanan</small></span><span class="quick-arrow">→</span></button><button class="quick-card" data-action="export-customers"><span class="quick-icon green">↓</span><span><b>Ekspor data</b><small>Unduh data pelanggan</small></span><span class="quick-arrow">→</span></button></div>`;
 }
-function toolbar(placeholder, action, label) { return `<div class="table-toolbar"><label class="searchbox"><span>⌕</span><input id="table-search" placeholder="${placeholder}" value="${esc(state.search)}"></label><div class="toolbar-actions"><button class="btn secondary" data-action="export-customers">↓ <span>Ekspor CSV</span></button><label class="btn secondary file-button">↑ <span>Impor CSV</span><input type="file" id="csv-import" accept=".csv,text/csv" hidden></label><button class="btn primary" data-modal="${action}">＋ ${label}</button></div></div>`; }
+function toolbar(placeholder, action, label) {
+ return `<div class="table-toolbar customer-transfer-toolbar">
+   <label class="searchbox"><span>⌕</span><input id="table-search" placeholder="${placeholder}" value="${esc(state.search)}"></label>
+   <div class="toolbar-actions transfer-actions">
+     <button class="btn secondary" data-template-format="csv" type="button">↓ Template CSV</button>
+     <button class="btn secondary" data-template-format="xlsx" type="button">↓ Template Excel</button>
+     <button class="btn secondary" data-export-format="csv" type="button">↧ Ekspor CSV</button>
+     <button class="btn secondary" data-export-format="xlsx" type="button">↧ Ekspor Excel</button>
+     <label class="btn secondary file-button">↑ <span>Impor CSV / Excel</span><input type="file" id="customer-import-file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></label>
+     <button class="btn primary" data-modal="${action}" type="button">＋ ${label}</button>
+   </div>
+  </div><div class="transfer-help">Isi file menggunakan template resmi. Paket harus sudah dibuat di menu Paket internet; harga akan mengikuti harga paket. Sebelum impor, sistem menampilkan pratinjau dan memeriksa format data.</div>`;
+}
 function customerPage() {
  const q=state.search.toLowerCase(); const rows=state.customers.filter(c=>`${c.full_name} ${c.phone} ${c.address}`.toLowerCase().includes(q));
  return `${pageHead('DATA LAYANAN','Pelanggan','Simpan kontak dan informasi layanan setiap pelanggan.',`<button class="btn primary" data-modal="customer">＋ Tambah pelanggan</button>`)}<div class="summary-line"><span class="summary-count"><b>${state.customers.length}</b> pelanggan terdata</span><div class="status-legend"><span>Aktif <b>${state.customers.filter(c=>c.status==='active').length}</b></span><span>Terisolir <b>${state.customers.filter(c=>c.status==='isolated').length}</b></span><span>Nonaktif <b>${state.customers.filter(c=>c.status==='inactive').length}</b></span></div></div>${toolbar('Cari nama, nomor, atau alamat…','customer','Tambah pelanggan')}<section class="panel table-panel"><div class="table-wrap"><table><thead><tr><th>PELANGGAN</th><th>PAKET</th><th>TAGIHAN / BULAN</th><th>JATUH TEMPO</th><th>STATUS</th><th></th></tr></thead><tbody>${rows.length?rows.map(c=>`<tr><td><div class="person-cell"><span class="avatar">${initials(c.full_name)}</span><span><b>${esc(c.full_name)}</b><small>${esc(c.phone||'Nomor belum diisi')}</small></span></div></td><td>${esc(state.packages.find(p=>p.id===c.package_id)?.name||'—')}</td><td><b>${money(c.monthly_price)}</b></td><td>Tanggal ${c.due_day}</td><td>${statusPill(c.status)}</td><td><div class="row-actions"><button title="Pesan WhatsApp" data-message-customer="${c.id}">↗</button><button title="Edit" data-edit="customer:${c.id}">✎</button><button title="Hapus" data-delete="customer:${c.id}">×</button></div></td></tr>`).join(''):`<tr><td colspan="6"><div class="empty-state"><b>${q?'Data tidak ditemukan':'Belum ada pelanggan'}</b><p>${q?'Coba kata kunci lain.':'Tambahkan pelanggan untuk mulai mengelola layanan.'}</p></div></td></tr>`}</tbody></table></div></section>`;
@@ -136,11 +150,28 @@ function settingsPage() {
  </div>`;
 }
 function guidePage() {
- const steps=[['01','Siapkan paket internet','Buat daftar paket dan harga bulanan agar mudah dipilih saat menambahkan pelanggan.'],['02','Catat pelanggan','Masukkan nama, nomor WhatsApp, alamat, paket, tarif, dan tanggal jatuh tempo.'],['03','Buat tagihan bulanan','Pilih bulan yang ditagihkan. Sistem membuat satu tagihan untuk setiap pelanggan aktif yang belum memiliki tagihan periode tersebut.'],['04','Catat pembayaran','Tandai tagihan lunas melalui tombol centang atau catat pembayaran dengan metode dan tanggal.'],['05','Kirim pengingat','Pilih pelanggan dan template. Pesan akan dibuka di WhatsApp untuk Anda periksa lalu kirim sendiri.'],['06','Impor dan ekspor data','Unduh CSV untuk cadangan. Impor CSV memakai kolom nama, telepon, alamat, paket, harga_bulanan, jatuh_tempo, status.']];
+ const steps=[['01','Siapkan paket internet','Buat daftar paket dan harga bulanan agar mudah dipilih saat menambahkan pelanggan.'],['02','Catat pelanggan','Masukkan nama, nomor WhatsApp, alamat, paket, tarif, dan tanggal jatuh tempo.'],['03','Buat tagihan bulanan','Pilih bulan yang ditagihkan. Sistem membuat satu tagihan untuk setiap pelanggan aktif yang belum memiliki tagihan periode tersebut.'],['04','Catat pembayaran','Tandai tagihan lunas melalui tombol centang atau catat pembayaran dengan metode dan tanggal.'],['05','Kirim pengingat','Pilih pelanggan dan template. Pesan akan dibuka di WhatsApp untuk Anda periksa lalu kirim sendiri.'],['06','Impor dan ekspor data','Unduh template CSV/Excel terlebih dahulu, isi sheet Pelanggan, lalu impor CSV/XLSX. Periksa pratinjau sebelum menyimpan. Harga mengikuti paket yang terdaftar.']];
  return `${pageHead('PUSAT BANTUAN','Panduan penggunaan','Langkah singkat menjalankan operasional WiFi Pro dari awal.',`<button class="btn secondary" data-action="export-customers">↓ Ekspor data pelanggan</button>`)}<div class="guide-grid">${steps.map(([n,t,d])=>`<article class="guide-card"><span>${n}</span><div><h2>${t}</h2><p>${d}</p></div></article>`).join('')}</div><section class="panel guide-note"><span class="note-icon">i</span><div><b>Catatan privasi</b><p>Aplikasi tidak mengirim pesan otomatis. Anda selalu meninjau lalu mengirim pesan melalui akun WhatsApp Anda sendiri.</p></div></section>`;
 }
 function modalView() {
  const m=state.modal;
+ if(m.type==='import-preview'){
+  const d=state.importDraft;
+  if(!d)return `<div class="modal-backdrop"><section class="modal-card"><div class="modal-fields"><p>File impor tidak tersedia.</p><button class="btn secondary" data-close-modal>Tutup</button></div></section></div>`;
+  const hasError=d.errors.length>0, canImport=!hasError&&d.records.length>0;
+  return `<div class="modal-backdrop"><section class="modal-card import-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="import-title">
+   <header><div><span class="eyebrow">PRATINJAU IMPOR</span><h2 id="import-title">Periksa data pelanggan</h2></div><button class="icon-button" data-close-modal aria-label="Tutup">×</button></header>
+   <div class="modal-fields">
+    <p class="modal-intro">File: <b>${esc(d.filename)}</b>. Impor hanya menambahkan pelanggan baru, bukan menimpa data yang ada.</p>
+    <div class="import-preview-stats"><div><strong>${d.total}</strong><span>Baris dibaca</span></div><div><strong>${d.records.length}</strong><span>Siap diimpor</span></div><div><strong>${d.skipped.length}</strong><span>Duplikat dilewati</span></div><div class="${hasError?'has-errors':''}"><strong>${d.errors.length}</strong><span>Baris bermasalah</span></div></div>
+    ${hasError?`<div class="import-error-list"><b>Perbaiki file, lalu impor ulang:</b>${d.errors.slice(0,8).map(x=>`<p>• ${esc(x)}</p>`).join('')}${d.errors.length>8?`<p>Dan ${d.errors.length-8} masalah lainnya.</p>`:''}</div>`:''}
+    ${d.skipped.length?`<div class="soft-callout">${d.skipped.length} data dengan nama dan nomor yang sama tidak akan diduplikasi.</div>`:''}
+    ${d.records.length?`<div class="import-sample"><b>Contoh data yang akan masuk:</b>${d.records.slice(0,4).map(x=>`<div><span>${esc(x.full_name)}<small>${esc(state.packages.find(p=>p.id===x.package_id)?.name||'')}</small></span><strong>${money(x.monthly_price)}</strong></div>`).join('')}</div>`:''}
+    <p class="field-hint">Harga mengikuti paket yang ada. Tanggal jatuh tempo tetap mengikuti kolom jatuh_tempo, bukan tanggal impor.</p>
+   </div>
+   <footer class="import-preview-actions"><button type="button" class="btn secondary" data-close-modal>Batal</button><button type="button" class="btn primary" data-confirm-import ${canImport?'':'disabled'}>${hasError?'Perbaiki file terlebih dahulu':d.records.length?'Impor '+d.records.length+' pelanggan':'Tidak ada data baru'}</button></footer>
+  </section></div>`;
+ }
  if(m.type==='confirm-delete') {
    const [type,id]=String(m.token||'').split(':');
    const configs={
@@ -299,9 +330,15 @@ async function deleteRecord(token) {
 function waNumber(phone,country) { let n=String(phone||'').replace(/\D/g,'');if(n.startsWith('0'))n=(country||'62')+n.slice(1);else if(!n.startsWith(country||'62'))n=(country||'62')+n;return n; }
 function openWhatsApp(c,message) { if(!c?.phone){toast('Nomor WhatsApp pelanggan belum diisi.','error');return;}const p=state.profile||{};const pkg=state.packages.find(x=>x.id===c.package_id);const text=String(message||'').replaceAll('{nama}',c.full_name||'').replaceAll('{usaha}',p.business_name||'').replaceAll('{paket}',pkg?.name||'').replaceAll('{tagihan}',money(c.monthly_price));window.open(`https://wa.me/${waNumber(c.phone,p.whatsapp_country_code)}?text=${encodeURIComponent(text)}`,'_blank','noopener,noreferrer'); }
 function messageInvoice(id){const i=state.invoices.find(x=>x.id===id);const c=state.customers.find(x=>x.id===i?.customer_id);if(!c)return;const defaultMsg=`Halo ${c.full_name}, kami mengingatkan tagihan WiFi bulan ${monthFmt(i.period)} sebesar ${money(i.amount)} jatuh tempo ${dateFmt(i.due_date)}. Terima kasih.`;openWhatsApp(c,defaultMsg);}
-function downloadCSV() { const rows=state.customers;const head=['nama','telepon','alamat','paket','harga_bulanan','jatuh_tempo','status','mulai','catatan'];const lines=[head,...rows.map(c=>[c.full_name,c.phone,c.address,state.packages.find(p=>p.id===c.package_id)?.name||'',c.monthly_price,c.due_day,c.status,c.started_at,c.notes||''])].map(row=>row.map(x=>`"${String(x??'').replaceAll('"','""')}"`).join(',')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+lines],{type:'text/csv;charset=utf-8'}));a.download=`wifi-pro-pelanggan-${today}.csv`;a.click();URL.revokeObjectURL(a.href);toast('CSV pelanggan berhasil diunduh'); }
-function parseCSV(text){const rows=[];let row=[],cell='',q=false;for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'&&q&&text[i+1]==='"'){cell+='"';i++;}else if(c==='"')q=!q;else if(c===','&&!q){row.push(cell);cell='';}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&text[i+1]==='\n')i++;row.push(cell);if(row.some(x=>x.trim()))rows.push(row);row=[];cell='';}else cell+=c;}if(cell||row.length){row.push(cell);rows.push(row);}const keys=(rows.shift()||[]).map(x=>x.trim().toLowerCase());return rows.map(r=>Object.fromEntries(keys.map((k,i)=>[k,(r[i]||'').trim()])));}
-async function importCSV(file){try{const items=parseCSV(await file.text());const p=state.profile;const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replaceAll(' ','_');const rows=[];for(const raw of items){const r=Object.fromEntries(Object.entries(raw).map(([k,v])=>[norm(k),v]));const name=r.nama||r.nama_lengkap||r.full_name;if(!name)continue;const pk=state.packages.find(x=>x.name.toLowerCase()===(r.paket||'').toLowerCase());rows.push({user_id:state.user.id,full_name:name,phone:r.telepon||r.nomor_wa||r.phone||'',address:r.alamat||r.address||'',package_id:pk?.id||null,monthly_price:Number(String(r.harga_bulanan||r.harga||0).replace(/\D/g,'')),due_day:Math.min(31,Math.max(1,Number(r.jatuh_tempo||r.tanggal_jatuh_tempo||10))),status:['active','isolated','inactive'].includes(r.status)?r.status:'active',started_at:r.mulai||today,notes:r.catatan||null});}if(!rows.length){toast('Tidak menemukan baris data dengan kolom nama.','error');return;}const {error}=await supabase.from('customers').insert(rows);if(error)throw error;toast(`${rows.length} pelanggan berhasil diimpor`);await refresh();}catch(e){toast(e.message||'Impor CSV gagal','error');}}
+async function prepareCustomerImport(file) {
+ try {
+  const items=await readCustomerFile(file);
+  const draft=validateCustomerRows(items,state.packages,state.customers,state.user.id,today);
+  state.importDraft={...draft,filename:file.name};
+  state.modal={type:'import-preview'};
+  render();
+ } catch(err){toast(err.message||'Gagal membaca file pelanggan.','error');}
+}
 
 app.addEventListener('click', async e=>{
  const page=e.target.closest('[data-page]');if(page){if(!state.user)return;state.search='';goTo(page.dataset.page);return;}
@@ -320,8 +357,26 @@ app.addEventListener('click', async e=>{
    catch(err){toast(err.message||'Penghapusan gagal. Coba lagi.','error');confirmDelete.disabled=false;confirmDelete.textContent='Ya, hapus permanen';}
    return;
  }
+ const templateDownload=e.target.closest('[data-template-format]');
+ if(templateDownload){const btn=templateDownload;btn.disabled=true;try{await downloadCustomerTemplate(btn.dataset.templateFormat);toast('Template berhasil diunduh.');}catch(err){toast(err.message||'Gagal mengunduh template.','error');}finally{btn.disabled=false;}return;}
+ const exportButton=e.target.closest('[data-export-format]');
+ if(exportButton){const btn=exportButton;btn.disabled=true;try{await exportCustomerData(btn.dataset.exportFormat,state.customers,state.packages,today);toast('Data pelanggan berhasil diekspor.');}catch(err){toast(err.message||'Gagal mengekspor data.','error');}finally{btn.disabled=false;}return;}
+ const importButton=e.target.closest('[data-confirm-import]');
+ if(importButton){
+   const draft=state.importDraft;
+   if(importButton.disabled||!draft||draft.errors.length||!draft.records.length)return;
+   importButton.disabled=true;importButton.textContent='Mengimpor…';
+   try{
+     const {error}=await supabase.from('customers').insert(draft.records);
+     if(error)throw error;
+     const count=draft.records.length;
+     state.importDraft=null;state.modal=null;toast(count+' pelanggan berhasil diimpor.');
+     await refresh();
+   }catch(err){toast(err.message||'Impor gagal. Tidak ada konfirmasi sukses.','error');importButton.disabled=false;importButton.textContent='Coba impor lagi';}
+   return;
+ }
  const generate=e.target.closest('[data-action="generate-invoices"]');if(generate){state.modal={type:'generate'};render();return;}
- if(e.target.closest('[data-action="export-customers"]')){downloadCSV();return;}
+ if(e.target.closest('[data-action="export-customers"]')){await exportCustomerData('csv',state.customers,state.packages,today);return;}
  const mi=e.target.closest('[data-message-invoice]');if(mi){messageInvoice(mi.dataset.messageInvoice);return;}
  const mc=e.target.closest('[data-message-customer]');if(mc){const c=state.customers.find(x=>x.id===mc.dataset.messageCustomer);openWhatsApp(c,`Halo ${c.full_name}, kami dari ${state.profile?.business_name||'WiFi kami'}. Ada informasi terkait layanan internet Anda. Terima kasih.`);return;}
  const pi=e.target.closest('[data-pay-invoice]');if(pi){state.modal={type:'payment',invoice:pi.dataset.payInvoice};render();setTimeout(()=>{const i=state.invoices.find(x=>x.id===pi.dataset.payInvoice);const c=document.querySelector('[name=customer_id]');const inv=document.querySelector('[name=invoice_id]');if(i&&c&&inv){c.value=i.customer_id;inv.value=i.id;const amt=document.querySelector('[name=amount]');if(amt)amt.value=i.amount;}},0);return;}
@@ -346,7 +401,7 @@ app.addEventListener('change',async e=>{
     if(price)price.value=pkg?Number(pkg.monthly_price):'';
     return;
   }
- if(e.target.id==='csv-import'&&e.target.files?.[0])await importCSV(e.target.files[0]);
+ if(e.target.id==='customer-import-file'&&e.target.files?.[0]){const file=e.target.files[0];e.target.value='';await prepareCustomerImport(file);return;}
  if(e.target.id==='invoice-period'){state.period=`${e.target.value}-01`;render();}
  if(e.target.id==='message-template'){const t=state.templates.find(x=>x.id===e.target.value);const body=document.querySelector('#message-body');if(t&&body)body.value=t.message;}
  if(e.target.id==='payment-invoice'){const opt=e.target.selectedOptions[0], customer=document.querySelector('#payment-customer'),amount=document.querySelector('[name=amount]');if(opt?.dataset.customer&&customer)customer.value=opt.dataset.customer;if(opt?.dataset.amount&&amount)amount.value=opt.dataset.amount;}
@@ -354,7 +409,7 @@ app.addEventListener('change',async e=>{
 
 function clearPrivateState() {
  state.user=null; state.profile=null; state.customers=[]; state.packages=[];
- state.invoices=[]; state.payments=[]; state.templates=[]; state.modal=null;
+ state.invoices=[]; state.payments=[]; state.templates=[]; state.modal=null; state.importDraft=null;
  state.search=''; state.authChecked=true;
 }
 async function boot(){
