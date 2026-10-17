@@ -34,3 +34,7 @@ Alamat internal akun: `<username>@wifi-users.bantuberes.com`, bukan inbox yang h
 
 
 Halaman publik: `#/login`, `#/register`. Halaman yang dilindungi: dashboard, pelanggan, paket, tagihan, pembayaran, pesan WhatsApp, pengaturan, dan panduan. Kunci yang dipakai di browser harus hanya publishable key; jangan pernah mengirim service_role/secret key ke klien. RLS pada database tetap menjadi kontrol akses utama meskipun route SPA menampilkan halaman login.
+
+## Fitur hapus data duplikat
+
+Dari menu Pelanggan, gunakan **Kemungkinan duplikat**, centang satu atau beberapa pelanggan, dan konfirmasi **Hapus data terpilih**. Batasnya 100 pelanggan per operasi. Hapus benar-benar menghapus record Supabase, bukan hanya menyembunyikan. Pelanggan dengan tagihan atau pembayaran terkait tidak bisa dihapus (dijaga juga oleh trigger database), untuk mencegah cascade penghapusan riwayat keuangan. Riwayat pembayaran yang salah dapat dihapus dari menu Pembayaran; status tagihan terkait diperbarui. Pengumuman fitur muncul sekali per akun dan tersedia lagi di header.
