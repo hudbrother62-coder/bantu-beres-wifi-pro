@@ -276,3 +276,15 @@ body{line-height:1.5;-webkit-font-smoothing:antialiased}
  .cleanup-bar .btn{flex:1;white-space:normal;min-height:36px;height:auto}
  .release-actions{display:grid;grid-template-columns:1fr 1fr}
 }
+
+/* Payment review controls, responsive in light and dark themes */
+.payment-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin:0 0 12px}
+.payment-toolbar .searchbox{flex:1 1 240px;max-width:330px;margin-right:auto}
+.payment-toolbar>span{font-size:11px;font-weight:700;color:var(--muted)}
+.payment-duplicate-note{margin:0 0 14px;padding:10px 13px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:10px;font-size:11px;line-height:1.5}
+.row-actions button:not(.visible-delete){min-width:35px;width:auto;padding:0 8px}
+@media(max-width:760px){
+.payment-toolbar .searchbox{flex:1 1 100%;max-width:none}
+.payment-toolbar>[data-action="filter-payment-duplicates"]{flex:1 1 100%;white-space:normal;min-height:38px;height:auto}
+.payment-toolbar .btn{white-space:normal}
+}

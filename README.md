@@ -38,3 +38,7 @@ Halaman publik: `#/login`, `#/register`. Halaman yang dilindungi: dashboard, pel
 ## Fitur hapus data duplikat
 
 Dari menu Pelanggan, gunakan **Kemungkinan duplikat**, centang satu atau beberapa pelanggan, dan konfirmasi **Hapus data terpilih**. Batasnya 100 pelanggan per operasi. Hapus benar-benar menghapus record Supabase, bukan hanya menyembunyikan. Pelanggan dengan tagihan atau pembayaran terkait tidak bisa dihapus (dijaga juga oleh trigger database), untuk mencegah cascade penghapusan riwayat keuangan. Riwayat pembayaran yang salah dapat dihapus dari menu Pembayaran; status tagihan terkait diperbarui. Pengumuman fitur muncul sekali per akun dan tersedia lagi di header.
+
+## Koreksi pembayaran dan tagihan
+
+Riwayat Pembayaran kini memiliki **Edit**, **Hapus**, filter **Kemungkinan pembayaran dobel**, pencarian, dan seleksi multi-hapus (maksimal 100 per tindakan). Penanda duplikat hanya saran pemeriksaan. Perubahan nominal, tanggal, metode, penerima, serta tagihan terkait disimpan langsung pada record milik akun, dan trigger PostgreSQL menghitung ulang status tagihan secara atomik. Menu Tagihan kini juga menyediakan **Edit** untuk nominal, periode, jatuh tempo, dan catatan.
