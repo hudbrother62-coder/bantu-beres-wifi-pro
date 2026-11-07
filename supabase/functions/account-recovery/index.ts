@@ -1,8 +1,13 @@
 import { createClient } from "npm:@supabase/supabase-js@2.75.1";
 const url = Deno.env.get("SUPABASE_URL") || "";
-const anon = Deno.env.get("SUPABASE_ANON_KEY") || "";
-const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info", "Access-Control-Allow-Methods": "POST, OPTIONS" };
+// Supabase projects may expose either legacy keys or the new key bundles.
+function bundledKey(name: string): string {
+ try { const keys=JSON.parse(Deno.env.get(name)||"{}"); return typeof keys.default==="string"?keys.default:""; }
+ catch { return ""; }
+}
+const anon = Deno.env.get("SUPABASE_ANON_KEY") || bundledKey("SUPABASE_PUBLISHABLE_KEYS") || "sb_publishable_lW5aaP9gPZh8flBAB4Hvug_Z_sC46yq";
+const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || bundledKey("SUPABASE_SECRET_KEYS");
+const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info, x-supabase-api-version", "Access-Control-Allow-Methods": "POST, OPTIONS" };
 function respond(value: Record<string, unknown>, status = 200) {
  return new Response(JSON.stringify(value), {status, headers:{...cors,"Content-Type":"application/json","Cache-Control":"no-store"}});
 }
