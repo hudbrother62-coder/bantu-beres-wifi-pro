@@ -1,24 +1,6 @@
-<!doctype html>
-<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pemulihan Akun | Bantu Beres WiFi Pro</title>
-<style>
-:root{font:16px system-ui,sans-serif;color-scheme:light dark}
-body{margin:0;background:#f2f5fa;color:#1e293b;min-height:100vh;display:grid;place-items:center}
-main{background:white;width:min(440px,calc(100% - 36px));padding:28px;box-sizing:border-box;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 16px 44px #0f172a12}
-small{font-weight:700;letter-spacing:.06em;color:#64748b}h1{font-size:26px;line-height:1.2;margin:10px 0}p{color:#64748b;line-height:1.6}
-label{display:block;margin-top:14px;font-weight:600}input,textarea{box-sizing:border-box;width:100%;padding:12px;border:1px solid #94a3b8;border-radius:9px;margin-top:6px;font:inherit}textarea{min-height:85px}
-button{background:#344fa7;color:white;padding:12px;border:0;border-radius:9px;font:inherit;font-weight:650;cursor:pointer;margin-top:16px}button:disabled{opacity:.55}a{color:#344fa7}
-#notice{white-space:pre-wrap;color:#047857;font-size:14px}#error{white-space:pre-wrap;color:#b91c1c;font-size:14px}
-[hidden]{display:none!important}
-@media(prefers-color-scheme:dark){body{background:#101b2c;color:#ecf3ff}main{background:#1c2b42;border-color:#334763}p,small{color:#b8c9e3}input,textarea{background:#132238;color:#fff;border-color:#52627a}a{color:#a7bcff}}
-</style></head>
-<body><main><small>BANTU BERES · WIFI PRO</small><h1 id="title">Pemulihan password</h1><p id="description">Gunakan kode pemulihan yang sudah kamu simpan ketika masih login.</p>
-<p id="error" role="alert"></p><p id="notice" role="status"></p>
-<form id="setup-form" hidden><label>Password saat ini<input type="password" id="current-password" required autocomplete="current-password"></label><button type="submit">Buat kode pemulihan</button></form>
-<form id="redeem-form" hidden><label>Username<input id="username" required autocomplete="username" maxlength="120" placeholder="Username WiFi Pro"></label>
-<label>Kode pemulihan<input id="code" required autocomplete="off" maxlength="60" placeholder="Tempel kode tersimpan"></label>
-<label>Password baru<input id="new-password" type="password" required minlength="8" maxlength="128" autocomplete="new-password"></label>
-<label>Konfirmasi password<input id="confirm-password" type="password" required minlength="8" maxlength="128" autocomplete="new-password"></label>
-<button type="submit">Ganti password</button></form>
-<section id="generated" hidden><label>Kode pemulihan — simpan di tempat aman<textarea id="recovery-code" readonly></textarea></label><button id="copy" type="button">Salin kode</button></section>
-<p><a href="/#/login">Kembali ke aplikasi</a></p></main><script type="module" src="/src/recovery.js"></script></body></html>
+<!doctype html><html lang="id"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="robots" content="noindex,nofollow"/><title>Pemulihan Akun — Bantu Beres WiFi Pro</title><style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color-scheme:light dark}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#edf1f7;color:#192638;display:grid;place-items:center;padding:20px}.card{width:min(100%,460px);border:1px solid #dbe2eb;border-radius:16px;background:#fff;padding:28px;box-shadow:0 12px 36px #14294310}.eyebrow{font-size:12px;font-weight:750;letter-spacing:.08em;color:#556a82}h1{font-size:25px;margin:12px 0}p{line-height:1.55;color:#526174}label{display:block;margin:16px 0 0;font-size:14px;font-weight:600}input{width:100%;font:inherit;padding:12px;border:1px solid #a6b3c6;border-radius:9px;margin-top:6px;color:#172638;background:#fff}button{width:100%;border:0;border-radius:9px;padding:13px;margin-top:17px;font:inherit;font-weight:650;background:#204c91;color:#fff;cursor:pointer}button:disabled{opacity:.6}a{color:#204c91}#code-result{width:100%;overflow-wrap:anywhere;font-family:ui-monospace,monospace;background:#f4f6fa;border-radius:9px;padding:12px;color:#172638}.note{font-size:13px}#message{white-space:pre-wrap;color:#14683e}#message.error{color:#b91c1c}@media(prefers-color-scheme:dark){body{background:#101927;color:#ecf2fb}.card{background:#1b293a;border-color:#36485d}.eyebrow,p{color:#bdc8d5}label{color:#fff}input{background:#142132;border-color:#68788c;color:#fff}#code-result{background:#101a29;color:#fff}a{color:#9dc7ff}}
+</style></head><body><main class="card"><div class="eyebrow">BANTU BERES · WIFI PRO</div><h1 id="title">Lupa password?</h1><p id="description">Gunakan kode pemulihan yang pernah disimpan ketika masih login. Kode ini bukan OTP email.</p><p id="message" role="status"></p>
+<form id="form"><div id="old-pass"><label>Password saat ini<input type="password" id="current" autocomplete="current-password"/></label></div><div id="new-pass"><label>Password baru<input type="password" id="password" minlength="8" maxlength="128" autocomplete="new-password"/></label><label>Ulangi password<input type="password" id="confirmation" minlength="8" maxlength="128" autocomplete="new-password"/></label></div><div id="recovery-code"><label>Kode pemulihan<input id="code" autocomplete="off" placeholder="Kode yang pernah disimpan"/></label></div><button type="submit" id="submit">Ganti password</button></form>
+<section id="success" hidden><p><strong>Kode pemulihan (hanya ditampilkan sekali)</strong></p><p id="code-result"></p><button type="button" id="copy">Salin kode</button><p class="note">Simpan di tempat aman. Bila hilang, kode baru hanya dapat diterbitkan ketika masih login.</p></section>
+<p class="note"><a href="/">Kembali ke Bantu Beres WiFi Pro</a></p></main><script type="module" src="/src/recovery.js"></script></body></html>
