@@ -32,7 +32,7 @@ Deno.serve(async (request: Request) => {
  // can follow its Supabase magic link and request a password update.
  if(action==="request-email-link"){
   const email=String(body.email||"").trim().toLowerCase();
-  if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)||email.length>254)return respond({error:"Masukkan alamat email yang valid."},400);
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254)return respond({error:"Masukkan alamat email yang valid."},400);
   const {data:alias,error:aliasError}=await admin.from("account_login_aliases").select("user_id").eq("login_email",email).maybeSingle();
   if(aliasError)return respond({error:"Layanan pemulihan sementara tidak tersedia."},503);
   if(alias?.user_id){
@@ -49,7 +49,7 @@ Deno.serve(async (request: Request) => {
   return respond({ok:true,message:"Jika email ini tertaut ke akun, tautan pemulihan akan dikirim."});
  }
  if(action==="redeem-email"){
-  const bearer=(request.headers.get("Authorization")||"").replace(/^Bearer\\s+/i,"");
+  const bearer=(request.headers.get("Authorization")||"").replace(/^Bearer\s+/i,"");
   if(!bearer)return respond({error:"Tautan pemulihan sudah tidak berlaku."},401);
   const {data:{user},error:sessionError}=await admin.auth.getUser(bearer);
   if(sessionError||!user?.email||!user.email_confirmed_at||!user.last_sign_in_at)return respond({error:"Verifikasi email belum valid."},401);
