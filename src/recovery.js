@@ -5,8 +5,10 @@ const sb=createClient(url,key);
 const $=(id)=>document.getElementById(id);
 const setup=new URLSearchParams(location.search).get('mode')==='setup';
 $('title').textContent=setup?'Siapkan kode pemulihan':'Lupa password?';
-$('description').textContent=setup?'Buat kode pemulihan yang dapat digunakan sekali bila lupa password. Konfirmasi password saat ini.':'Masukkan kode pemulihan yang sebelumnya kamu simpan. Email buatan sistem tidak dapat menerima OTP.';
+$('description').textContent=setup?'Buat kode pemulihan yang dapat digunakan sekali bila lupa password. Konfirmasi password saat ini.':'Gunakan tautan yang dikirim ke email tertaut, atau buka opsi kode pemulihan di bawahnya.';
 $('old-pass').hidden=!setup;$('new-pass').hidden=setup;$('recovery-code').hidden=setup;
+$('code-details').open=setup;
+$('email-panel').hidden=setup;
 $('submit').textContent=setup?'Buat kode pemulihan':'Ganti password';
 function message(text,error=false){$('message').textContent=text;$('message').className=error?'error':'';}
 if(setup)sb.auth.getUser().then(({data,error})=>{if(error||!data.user){$('submit').disabled=true;message('Silakan login melalui aplikasi terlebih dahulu untuk membuat kode pemulihan.',true);}});
@@ -56,6 +58,7 @@ const incomingAliasReset = incomingMode === 'verify-email' || incomingType === '
 function showEmailResetForm() {
   emailRecoverySession = true;
   $('email-panel').hidden = true;
+  $('code-details').hidden = true;
   $('form').hidden = true;
   $('email-update-section').hidden = false;
   $('title').textContent = 'Atur ulang password';
