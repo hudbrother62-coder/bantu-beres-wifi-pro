@@ -4,10 +4,10 @@
 <form id="form"><div id="old-pass"><label>Password saat ini<input type="password" id="current" autocomplete="current-password"/></label></div><div id="new-pass"><label>Password baru<input type="password" id="password" minlength="8" maxlength="128" autocomplete="new-password"/></label><label>Ulangi password<input type="password" id="confirmation" minlength="8" maxlength="128" autocomplete="new-password"/></label></div><div id="recovery-code"><label>Kode pemulihan<input id="code" autocomplete="off" placeholder="Kode yang pernah disimpan"/></label></div><button type="submit" id="submit">Ganti password</button></form>
 <section id="success" hidden><p><strong>Kode pemulihan (hanya ditampilkan sekali)</strong></p><p id="code-result"></p><button type="button" id="copy">Salin kode</button><p class="note">Simpan di tempat aman. Bila hilang, kode baru hanya dapat diterbitkan ketika masih login.</p></section>
 <section id="email-panel" class="email-panel">
-  <h2>Pemulihan melalui email</h2>
-  <p class="note">Untuk akun yang memakai email asli terverifikasi di Supabase Auth. Akun username dengan email internal tetap memakai kode pemulihan.</p>
+  <h2>Reset password lewat email</h2>
+  <p class="note">Untuk akun dengan email login yang sudah ditautkan ke WiFi Pro. Anda akan menerima tautan verifikasi; klik tautan tersebut lalu tetapkan password baru. Kode pemulihan tetap bisa digunakan tanpa email.</p>
   <form id="email-request-form">
-    <label>Email akun terverifikasi<input id="recovery-email" type="email" autocomplete="email" placeholder="nama@contoh.com" required maxlength="254"/></label>
+    <label>Email login tertaut<input id="recovery-email" type="email" autocomplete="email" placeholder="nama@contoh.com" required maxlength="254"/></label>
     <button id="email-request-button" type="submit">Kirim tautan reset password</button>
   </form>
 </section>
