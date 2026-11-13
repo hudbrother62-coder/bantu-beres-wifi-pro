@@ -10,8 +10,9 @@ const cfg = {
 };
 // Keep password-recovery links working even when Supabase redirects to the site root.
 const incomingAuthHash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-if (incomingAuthHash.get('type') === 'recovery' && incomingAuthHash.has('access_token')) {
-  window.location.replace('/recovery.html?mode=email-reset' + window.location.hash);
+if (['recovery', 'magiclink', 'signup'].includes(incomingAuthHash.get('type')) && incomingAuthHash.has('access_token')) {
+  const recoveryMode = incomingAuthHash.get('type') === 'recovery' ? 'email-reset' : 'verify-email';
+  window.location.replace('/recovery.html?mode=' + recoveryMode + window.location.hash);
 }
 const supabase = cfg.url && cfg.key ? createClient(cfg.url, cfg.key) : null;
 const app = document.querySelector('#app');
