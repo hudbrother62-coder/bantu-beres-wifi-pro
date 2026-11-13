@@ -8,6 +8,11 @@ const cfg = {
   url: import.meta.env.VITE_SUPABASE_URL || 'https://ypekuhwyjvyyzvedncqh.supabase.co',
   key: import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_lW5aaP9gPZh8flBAB4Hvug_Z_sC46yq'
 };
+// Keep password-recovery links working even when Supabase redirects to the site root.
+const incomingAuthHash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+if (incomingAuthHash.get('type') === 'recovery' && incomingAuthHash.has('access_token')) {
+  window.location.replace('/recovery.html?mode=email-reset' + window.location.hash);
+}
 const supabase = cfg.url && cfg.key ? createClient(cfg.url, cfg.key) : null;
 const app = document.querySelector('#app');
 const money = n => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(Number(n || 0));
