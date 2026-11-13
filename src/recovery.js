@@ -34,31 +34,44 @@ emailRequestForm.onsubmit = async (event) => {
   button.disabled = true;
   try {
     const email = $('recovery-email').value.trim().toLowerCase();
-    const redirectTo = new URL('/recovery.html?mode=email-reset', location.origin).toString();
-    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
-    if (error) throw error;
-    message('Jika email tersebut merupakan identitas Supabase Auth yang terverifikasi, tautan reset akan dikirim. Silakan cek kotak masuk dan spam.');
+    const { data, error } = await sb.functions.invoke('account-recovery', { body: { action: 'request-email-link', email } });
+    if (error || !data?.ok) {
+      let reason = data?.error || 'Permintaan pemulihan belum berhasil.';
+      if (error?.context?.json) {
+        try { reason = (await error.context.json()).error || reason; } catch { /* Keep safe fallback. */ }
+      }
+      throw new Error(reason);
+    }
+    message('Jika email tertaut ke akun WiFi Pro, tautan pemulihan akan dikirim. Cek kotak masuk dan spam.');
   } catch (error) {
     message(error.message || 'Tidak dapat mengirim permintaan reset. Coba lagi nanti.', true);
   } finally { button.disabled = false; }
 };
 
 let emailRecoverySession = false;
-const incomingEmailReset = new URLSearchParams(location.hash.slice(1)).get('type') === 'recovery';
+const incomingType = new URLSearchParams(location.hash.slice(1)).get('type');
+const incomingMode = new URLSearchParams(location.search).get('mode');
+const incomingEmailReset = incomingType === 'recovery';
+const incomingAliasReset = incomingMode === 'verify-email' || incomingType === 'magiclink' || incomingType === 'signup';
 function showEmailResetForm() {
   emailRecoverySession = true;
   $('email-panel').hidden = true;
   $('form').hidden = true;
   $('email-update-section').hidden = false;
   $('title').textContent = 'Atur ulang password';
-  $('description').textContent = 'Verifikasi email berhasil. Silakan buat password baru.';
+  $('description').textContent = 'Email sudah diverifikasi. Silakan buat password baru untuk akun WiFi Pro.';
   message('');
 }
 sb.auth.onAuthStateChange((event, session) => {
-  if (event === 'PASSWORD_RECOVERY' || (incomingEmailReset && session?.user)) {
+  if (event === 'PASSWORD_RECOVERY' || ((incomingEmailReset || incomingAliasReset) && session?.user)) {
     showEmailResetForm();
   }
 });
+if (incomingAliasReset) {
+  sb.auth.getUser().then(({ data, error }) => {
+    if (!error && data.user) showEmailResetForm();
+  });
+}
 if (new URLSearchParams(location.search).has('code')) {
   // Supports PKCE links in addition to standard implicit-flow recovery links.
   sb.auth.exchangeCodeForSession(new URLSearchParams(location.search).get('code'))
@@ -77,8 +90,21 @@ $('email-update-form').onsubmit = async (event) => {
     if (password.length < 8 || password !== $('email-confirm-password').value) {
       throw new Error('Password harus minimal 8 karakter dan kedua isian harus sama.');
     }
-    const { error } = await sb.auth.updateUser({ password });
-    if (error) throw error;
+    if (incomingAliasReset) {
+      const { data, error } = await sb.functions.invoke('account-recovery', {
+        body: { action: 'redeem-email', password, confirmation: $('email-confirm-password').value }
+      });
+      if (error || !data?.ok) {
+        let reason = data?.error || 'Permintaan reset belum berhasil.';
+        if (error?.context?.json) {
+          try { reason = (await error.context.json()).error || reason; } catch { /* Keep safe fallback. */ }
+        }
+        throw new Error(reason);
+      }
+    } else {
+      const { error } = await sb.auth.updateUser({ password });
+      if (error) throw error;
+    }
     await sb.auth.signOut();
     $('email-update-section').hidden = true;
     $('title').textContent = 'Password telah diperbarui';
