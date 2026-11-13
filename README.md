@@ -42,3 +42,26 @@ Dari menu Pelanggan, gunakan **Kemungkinan duplikat**, centang satu atau beberap
 ## Koreksi pembayaran dan tagihan
 
 Riwayat Pembayaran kini memiliki **Edit**, **Hapus**, filter **Kemungkinan pembayaran dobel**, pencarian, dan seleksi multi-hapus (maksimal 100 per tindakan). Penanda duplikat hanya saran pemeriksaan. Perubahan nominal, tanggal, metode, penerima, serta tagihan terkait disimpan langsung pada record milik akun, dan trigger PostgreSQL menghitung ulang status tagihan secara atomik. Menu Tagihan kini juga menyediakan **Edit** untuk nominal, periode, jatuh tempo, dan catatan.
+
+## Login email tertaut dan lupa password
+
+Akun lama tetap menggunakan username beserta password yang disimpan di Supabase Auth.
+Email login opsional dipetakan hanya di server melalui Edge Function `login-alias`
+dan tabel `account_login_aliases`. Browser tidak memperoleh identitas email internal
+dari tabel tersebut. Alias **bukan** pengganti password dan **tidak otomatis memverifikasi**
+kepemilikan email; hanya administrator berwenang yang boleh menautkan alias.
+
+Halaman publik `/recovery.html` menyediakan dua jalur pemulihan:
+- Email tertaut: Edge Function `account-recovery` meminta Supabase Auth mengirim
+  magic link ke inbox yang telah ditautkan. Setelah link diklik, Edge Function
+  memverifikasi sesi email, membatasi masa berlaku hingga 10 menit, dan hanya
+  mengizinkan satu penggunaan per sesi. Email pengguna yang tidak tertaut
+  tidak diungkapkan kepada pengunjung.
+- Kode pemulihan: ketika masih login, pemilik dapat menerbitkan kode acak
+  sekali pakai melalui `/recovery.html?mode=setup` setelah konfirmasi password.
+  Hash kode disimpan di database; pemulihan dari luar sesi mengonsumsi kode.
+
+Pengiriman magic link memerlukan **Site URL dan Redirect URLs** Supabase Auth
+yang mengarah ke domain production, serta SMTP yang dapat mengirim email.
+Layanan email bawaan Supabase memiliki batas pengiriman untuk penggunaan produksi.
+Tidak ada password yang di-reset hanya karena seseorang mengetahui alamat email.
