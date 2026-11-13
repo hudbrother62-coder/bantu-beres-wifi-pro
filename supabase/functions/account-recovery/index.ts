@@ -27,6 +27,50 @@ Deno.serve(async (request: Request) => {
  try{ body=await request.json(); }catch{return respond({error:"Data tidak valid."},400);}
  const admin=createClient(url,serviceKey,{auth:{autoRefreshToken:false,persistSession:false}});
  const action=body?.action;
+
+ // The email login alias is assigned by an administrator. Only the inbox owner
+ // can follow its Supabase magic link and request a password update.
+ if(action==="request-email-link"){
+  const email=String(body.email||"").trim().toLowerCase();
+  if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)||email.length>254)return respond({error:"Masukkan alamat email yang valid."},400);
+  const {data:alias,error:aliasError}=await admin.from("account_login_aliases").select("user_id").eq("login_email",email).maybeSingle();
+  if(aliasError)return respond({error:"Layanan pemulihan sementara tidak tersedia."},503);
+  if(alias?.user_id){
+   const otp=createClient(url,anon,{auth:{autoRefreshToken:false,persistSession:false}});
+   const {error:otpError}=await otp.auth.signInWithOtp({
+    email,options:{shouldCreateUser:true,emailRedirectTo:"https://bantu-beres-wifi-pro.vercel.app/recovery.html?mode=verify-email"}
+   });
+   if(otpError){
+    if(/rate|limit|too many/i.test(otpError.message))return respond({error:"Batas pengiriman email tercapai. Coba lagi nanti; tautan sebelumnya tetap berlaku sampai kedaluwarsa."},429);
+    return respond({error:"Email pemulihan belum dapat dikirim. Coba lagi nanti."},503);
+   }
+  }
+  // Identical success response for existing and unknown emails.
+  return respond({ok:true,message:"Jika email ini tertaut ke akun, tautan pemulihan akan dikirim."});
+ }
+ if(action==="redeem-email"){
+  const bearer=(request.headers.get("Authorization")||"").replace(/^Bearer\\s+/i,"");
+  if(!bearer)return respond({error:"Tautan pemulihan sudah tidak berlaku."},401);
+  const {data:{user},error:sessionError}=await admin.auth.getUser(bearer);
+  if(sessionError||!user?.email||!user.email_confirmed_at||!user.last_sign_in_at)return respond({error:"Verifikasi email belum valid."},401);
+  // A magic-link sign-in must be recent. Old sessions cannot reset passwords.
+  const signedInAt=Date.parse(user.last_sign_in_at);
+  if(!Number.isFinite(signedInAt)||Date.now()-signedInAt>10*60*1000||signedInAt-Date.now()>60*1000)
+   return respond({error:"Tautan pemulihan sudah kedaluwarsa. Minta tautan baru."},401);
+  const email=user.email.trim().toLowerCase();
+  const {data:alias,error:aliasError}=await admin.from("account_login_aliases").select("user_id").eq("login_email",email).maybeSingle();
+  if(aliasError||!alias?.user_id||alias.user_id===user.id)return respond({error:"Pemulihan akun belum tersedia."},401);
+  const password=typeof body.password==="string"?body.password:"";
+  const confirmation=typeof body.confirmation==="string"?body.confirmation:"";
+  if(password.length<8||password.length>128||password!==confirmation)return respond({error:"Password baru harus 8–128 karakter dan kedua isian harus sama."},400);
+  const {error:consumed}=await admin.from("account_email_recovery_redemptions").insert({
+   verifier_user_id:user.id,signed_in_at:user.last_sign_in_at,recovered_user_id:alias.user_id
+  });
+  if(consumed)return respond({error:"Tautan pemulihan sudah digunakan. Mintalah tautan baru."},409);
+  const {error:resetError}=await admin.auth.admin.updateUserById(alias.user_id,{password});
+  if(resetError)return respond({error:"Password belum dapat diubah. Mintalah tautan baru atau hubungi dukungan."},503);
+  return respond({ok:true,message:"Password akun WiFi Pro berhasil diperbarui."});
+ }
  if(action==="issue"){
   const bearer=(request.headers.get("Authorization")||"").replace(/^Bearer\s+/i,"");
   if(!bearer)return respond({error:"Silakan login terlebih dahulu."},401);
