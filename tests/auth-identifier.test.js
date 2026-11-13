@@ -31,6 +31,6 @@ test('email alias failure does not start an unauthenticated session', async()=>{
 });
 test('legacy internal email uses existing auth flow',()=>{
   assert.equal(isEmailAlias('rendy92@wifi-users.bantuberes.com'),false);
-  assert.equal(isEmailAlias('rendy.hariyanto92@gmail.com'),true);
+  assert.equal(isEmailAlias('owner@example.com'),true);
   assert.equal(normalizeLoginIdentifier(' TEST '),'test');
 });
