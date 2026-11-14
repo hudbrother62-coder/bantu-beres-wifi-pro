@@ -31,7 +31,7 @@ test('invoice menampilkan jumlah pembayaran dan sisa yang benar',()=>{
 });
 
 test('transaksi dan pelanggan tidak boleh dipasangkan dengan id berbeda',()=>{
- assert.throws(()=>buildTransactionDocument({kind:'payment',record:payment,customer:{...customer,id:'other'}}),/tidak lengkap/);
+ assert.throws(()=>buildTransactionDocument({kind:'payment',record:payment,customer:{...customer,id:'other'}}),/belum lengkap/);
 });
 
 test('pdf berisi header, objek gambar, xref, dan footer',async()=>{
