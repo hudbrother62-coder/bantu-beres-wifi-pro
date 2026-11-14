@@ -234,15 +234,33 @@ function modalView() {
  if(m.type==='transaction-document'){
   const doc=currentTransactionDocument();
   if(!doc)return '<div class="modal-backdrop"><section class="modal-card receipt-dialog" role="dialog" aria-modal="true"><div class="modal-fields"><p>Dokumen tidak tersedia. Muat ulang data transaksi.</p><button type="button" class="btn secondary" data-close-modal>Tutup</button></div></section></div>';
-  return '<div class="modal-backdrop"><section class="modal-card receipt-dialog" role="dialog" aria-modal="true" aria-label="Pratinjau struk atau invoice">' +
-   '<header><div><span class="eyebrow">BUKTI TRANSAKSI WIFI PRO</span><h2>' + esc(doc.title) + '</h2></div><button type="button" class="icon-button" aria-label="Tutup" data-close-modal>×</button></header>' +
-   '<div class="receipt-modal-body"><p class="field-hint">Struk memakai data transaksi asli. Pilih lebar kertas untuk printer thermal dan PDF.</p>' +
-   '<label class="receipt-size-field">Lebar kertas<select id="receipt-paper-size"><option value="80">80 mm · printer thermal standar</option><option value="58">58 mm · printer thermal kecil</option></select></label>' +
-   '<div class="receipt-preview" style="--paper-mm:80mm">' + receiptMarkup(doc) + '</div>' +
-   '<p class="field-hint">Printer Bluetooth, USB, atau WiFi perlu dipasangkan di perangkat terlebih dahulu. Tombol Cetak menggunakan daftar printer perangkat.</p></div>' +
-   '<footer class="receipt-toolbar"><button class="btn secondary" type="button" data-document-action="print">Cetak</button>' +
-   '<button class="btn secondary" type="button" data-document-action="pdf">Unduh PDF</button>' +
-   '<button class="btn primary" type="button" data-document-action="share">Bagikan PDF</button></footer></section></div>';
+  const isPayment=doc.kind==='payment';
+  const customer=doc.lines.find(([label])=>label==='Pelanggan')?.[1]||'Pelanggan';
+  const packageName=doc.lines.find(([label])=>label==='Paket internet')?.[1]||'—';
+  const period=doc.lines.find(([label])=>label==='Periode layanan')?.[1]||'—';
+  const method=doc.lines.find(([label])=>label==='Cara bayar')?.[1]||'—';
+  const date=doc.lines.find(([label])=>label==='Tanggal bayar'||label==='Tanggal dibuat')?.[1]||'—';
+  const status=doc.lines.find(([label])=>label==='Status tagihan'||label==='Status')?.[1]||'Tercatat';
+  const row=(label,value)=>'<div class="receipt-overview-row"><span>'+esc(label)+'</span><b>'+esc(value)+'</b></div>';
+  return '<div class="modal-backdrop"><section class="modal-card receipt-dialog receipt-dialog-modern" role="dialog" aria-modal="true" aria-label="' + (isPayment?'Detail pembayaran':'Detail invoice') + '">' +
+    '<header class="receipt-dialog-header"><div><span class="eyebrow">BANTU BERES WIFI PRO</span><h2>' + (isPayment?'Detail Pembayaran':'Detail Invoice') + '</h2></div><button class="icon-button" type="button" aria-label="Tutup" data-close-modal>×</button></header>' +
+    '<div class="receipt-dialog-grid"><section class="receipt-overview">' +
+    '<div class="receipt-status"><span class="receipt-status-symbol" aria-hidden="true">' + (isPayment?'✓':'▤') + '</span>' +
+    '<h3>' + (isPayment?'Pembayaran Berhasil Dicatat':'Invoice Siap Dicetak') + '</h3>' +
+    '<p>' + (isPayment?'Bukti pembayaran tersedia untuk pelanggan.':'Tagihan dapat diunduh, dicetak, atau dibagikan.') + '</p></div>' +
+    '<div class="receipt-overview-details">' + row('Pelanggan',customer) + row('Paket',packageName) + row('Periode',period) + row('Tanggal',date) +
+    row('No. transaksi',doc.number) + (isPayment?row('Metode bayar',method):row('Status tagihan',status)) +
+    '<div class="receipt-overview-total"><span>'+(isPayment?'Total Bayar':'Total Tagihan')+'</span><strong>'+esc(doc.amountText)+'</strong></div></div>' +
+    '<label class="receipt-size-field">Ukuran struk<select id="receipt-paper-size" aria-label="Lebar kertas untuk struk"><option value="80">80 mm · Printer thermal</option><option value="58">58 mm · Printer thermal kecil</option></select></label>' +
+    '<div class="receipt-action-stack"><button type="button" class="btn primary" data-document-action="print">▣ &nbsp; Cetak Struk</button>' +
+    '<button type="button" class="btn secondary" data-document-action="pdf">↓ &nbsp; Unduh PDF</button>' +
+    '<button type="button" class="btn secondary" data-document-action="share">↗ &nbsp; Bagikan ke WhatsApp / Aplikasi</button>' +
+    '<button type="button" class="receipt-back-btn" data-close-modal>← &nbsp; Kembali</button></div>' +
+    '<p class="receipt-printer-hint">Gunakan printer yang sudah terhubung ke HP atau komputer. Kirim PDF melalui menu berbagi perangkat.</p></section>' +
+    '<section class="receipt-preview-zone" aria-label="Pratinjau bukti transaksi"><div class="receipt-preview-title"><div><span class="eyebrow">PRATINJAU DOKUMEN</span><strong>' +
+    (isPayment?'Struk Pembayaran':'Invoice Tagihan') + '</strong></div><span class="receipt-preview-badge">PDF · CETAK</span></div>' +
+    '<div class="receipt-preview" style="--paper-mm:80mm">'+receiptMarkup(doc)+'</div><p class="receipt-paper-note">Pratinjau mengikuti pilihan ukuran kertas 58/80 mm.</p></section>' +
+    '</div></section></div>';
  }
  if(m.type==='import-preview'){
   const d=state.importDraft;
@@ -560,7 +578,7 @@ app.addEventListener('click', async e=>{
    if(err?.name!=='AbortError')toast(err?.message||'Gagal memproses struk.','error');
   }finally{
    receiptAction.disabled=false;
-   receiptAction.textContent=receiptAction.dataset.documentAction==='pdf'?'Unduh PDF':receiptAction.dataset.documentAction==='share'?'Bagikan PDF':'Cetak';
+   receiptAction.textContent=receiptAction.dataset.documentAction==='pdf'?'↓   Unduh PDF':receiptAction.dataset.documentAction==='share'?'↗   Bagikan ke WhatsApp / Aplikasi':'▣   Cetak Struk';
   }
   return;
  }
