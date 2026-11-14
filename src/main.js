@@ -179,7 +179,7 @@ function settingsPage() {
  </div>`;
 }
 function guidePage() {
- const steps=[['01','Siapkan paket internet','Buat daftar paket dan harga bulanan agar mudah dipilih saat menambahkan pelanggan.'],['02','Catat pelanggan','Masukkan nama, nomor WhatsApp, alamat, paket, tarif, dan tanggal jatuh tempo.'],['03','Buat tagihan bulanan','Pilih bulan yang ditagihkan. Sistem membuat satu tagihan untuk setiap pelanggan aktif yang belum memiliki tagihan periode tersebut.'],['04','Catat pembayaran','Tandai tagihan lunas melalui tombol centang atau catat pembayaran dengan metode dan tanggal.'],['05','Kirim pengingat','Pilih pelanggan dan template. Pesan akan dibuka di WhatsApp untuk Anda periksa lalu kirim sendiri.'],['06','Impor dan ekspor data','Unduh template CSV/Excel terlebih dahulu, isi sheet Pelanggan, lalu impor CSV/XLSX. Periksa pratinjau sebelum menyimpan. Harga mengikuti paket yang terdaftar.'],['07','Hapus data duplikat','Lihat kemungkinan duplikat di menu Pelanggan, centang data yang ingin dihapus, lalu konfirmasi. Riwayat tagihan dan pembayaran terlindungi.'],['08','Koreksi pembayaran','Pada menu Pembayaran, pilih Edit atau Hapus. Untuk pembayaran ganda gunakan filter dan Hapus terpilih. Status tagihan diperbarui otomatis.'],['09','Edit tagihan','Pada menu Tagihan gunakan tombol Edit untuk mengubah nominal, periode, jatuh tempo, atau catatan.']];
+ const steps=[['01','Siapkan paket internet','Buat daftar paket dan harga bulanan agar mudah dipilih saat menambahkan pelanggan.'],['02','Catat pelanggan','Masukkan nama, nomor WhatsApp, alamat, paket, tarif, dan tanggal jatuh tempo.'],['03','Buat tagihan bulanan','Pilih bulan yang ditagihkan. Sistem membuat satu tagihan untuk setiap pelanggan aktif yang belum memiliki tagihan periode tersebut.'],['04','Catat pembayaran','Tandai tagihan lunas melalui tombol centang atau catat pembayaran dengan metode dan tanggal.'],['05','Kirim pengingat','Pilih pelanggan dan template. Pesan akan dibuka di WhatsApp untuk Anda periksa lalu kirim sendiri.'],['06','Impor dan ekspor data','Unduh template CSV/Excel terlebih dahulu, isi sheet Pelanggan, lalu impor CSV/XLSX. Periksa pratinjau sebelum menyimpan. Harga mengikuti paket yang terdaftar.'],['07','Hapus data duplikat','Lihat kemungkinan duplikat di menu Pelanggan, centang data yang ingin dihapus, lalu konfirmasi. Riwayat tagihan dan pembayaran terlindungi.'],['08','Koreksi pembayaran','Pada menu Pembayaran, pilih Edit atau Hapus. Untuk pembayaran ganda gunakan filter dan Hapus terpilih. Status tagihan diperbarui otomatis.'],['09','Edit tagihan','Pada menu Tagihan gunakan tombol Edit untuk mengubah nominal, periode, jatuh tempo, atau catatan.'],['10','Cetak dan bagikan struk','Di menu Pembayaran pilih Struk, kemudian Cetak, Unduh PDF, atau Bagikan PDF. Pilih kertas 58/80 mm sesuai printer. Di menu Tagihan tersedia tombol Invoice.']];
  return `${pageHead('PUSAT BANTUAN','Panduan penggunaan','Langkah singkat menjalankan operasional WiFi Pro dari awal.',`<button class="btn secondary" data-action="export-customers">↓ Ekspor data pelanggan</button>`)}<div class="guide-grid">${steps.map(([n,t,d])=>`<article class="guide-card"><span>${n}</span><div><h2>${t}</h2><p>${d}</p></div></article>`).join('')}</div><section class="panel guide-note"><span class="note-icon">i</span><div><b>Catatan privasi</b><p>Aplikasi tidak mengirim pesan otomatis. Anda selalu meninjau lalu mengirim pesan melalui akun WhatsApp Anda sendiri.</p></div></section>`;
 }
 
@@ -380,7 +380,7 @@ async function saveRecord(form) {
   const {data,error}=id?await supabase.from('payments').update(payload).eq('id',id).eq('user_id',uid).select('id'):await supabase.from('payments').insert({...payload,user_id:uid}).select('id');
   if(error)throw error;
   if(data?.length!==1)throw new Error('Pembayaran gagal disimpan.');
-  state.modal=null;await refresh();toast(id?'Pembayaran diperbarui.':'Pembayaran dicatat.');return;
+  state.modal=null;await refresh();if(!id){state.modal={type:'transaction-document',kind:'payment',recordId:data[0].id};render();}toast(id?'Pembayaran diperbarui.':'Pembayaran dicatat. Struk siap dicetak atau dibagikan.');return;
  }
  if(type==='invoice'){
   if(!state.invoices.some(i=>i.id===id))throw new Error('Tagihan tidak ditemukan.');
@@ -499,6 +499,39 @@ app.addEventListener('click', async e=>{
  const theme=e.target.closest('[data-theme-set]');if(theme){state.theme=theme.dataset.themeSet;localStorage.setItem('wifi-theme',state.theme);document.documentElement.dataset.theme=state.theme;render();return;}
  const modal=e.target.closest('[data-modal]');if(modal){state.modal={type:modal.dataset.modal};render();return;}
  if(e.target.closest('button[data-close-modal]')){state.modal=null;render();return;}
+
+ const docButton=e.target.closest('[data-document]');
+ if(docButton){
+  const [kind,recordId]=docButton.dataset.document.split(':');
+  if(!['payment','invoice'].includes(kind)||!recordId)return;
+  state.modal={type:'transaction-document',kind,recordId};render();return;
+ }
+ const receiptAction=e.target.closest('[data-document-action]');
+ if(receiptAction){
+  try{
+   const doc=currentTransactionDocument();
+   if(!doc)throw new Error('Transaksi tidak ditemukan.');
+   const size=Number(document.querySelector('#receipt-paper-size')?.value||80);
+   const action=receiptAction.dataset.documentAction;
+   if(action==='print'){printTransactionDocument(doc,size);return;}
+   receiptAction.disabled=true;
+   receiptAction.textContent=action==='share'?'Menyiapkan berkas…':'Membuat PDF…';
+   if(action==='pdf'){
+    const blob=await transactionPdf(doc,size);
+    downloadTransactionPdf(blob,doc.filename);
+    toast('PDF siap diunduh.');
+   }else if(action==='share'){
+    const result=await shareTransactionPdf(doc,size);
+    if(result==='downloaded')toast('PDF diunduh. Lampirkan berkas tersebut ke WhatsApp pelanggan.');
+   }
+  }catch(err){
+   if(err?.name!=='AbortError')toast(err?.message||'Gagal memproses struk.','error');
+  }finally{
+   receiptAction.disabled=false;
+   receiptAction.textContent=receiptAction.dataset.documentAction==='pdf'?'Unduh PDF':receiptAction.dataset.documentAction==='share'?'Bagikan PDF':'Cetak';
+  }
+  return;
+ }
  const edit=e.target.closest('[data-edit]');if(edit){const [type,id]=edit.dataset.edit.split(':');const map={customer:'customers',package:'packages',template:'templates',invoice:'invoices',payment:'payments'};const data=state[map[type]]?.find(x=>x.id===id);if(!data){toast('Data tidak ditemukan.','error');return;}state.modal={type,data};render();return;}
  const del=e.target.closest('[data-delete]');if(del){state.modal={type:'confirm-delete',token:del.dataset.delete};render();return;}
  const payBulk=e.target.closest('[data-confirm-payment-bulk]');
@@ -562,7 +595,8 @@ app.addEventListener('change',async e=>{
     return;
   }
  if(e.target.id==='customer-import-file'&&e.target.files?.[0]){const file=e.target.files[0];e.target.value='';await prepareCustomerImport(file);return;}
- if(e.target.id==='invoice-period'){state.period=`${e.target.value}-01`;render();}
+ if(e.target.id==='receipt-paper-size'){const el=document.querySelector('.receipt-preview');if(el)el.style.setProperty('--paper-mm',e.target.value==='58'?'58mm':'80mm');return;}
+  if(e.target.id==='invoice-period'){state.period=`${e.target.value}-01`;render();}
  if(e.target.id==='message-template'){const t=state.templates.find(x=>x.id===e.target.value);const body=document.querySelector('#message-body');if(t&&body)body.value=t.message;}
  if(e.target.id==='payment-invoice'){const opt=e.target.selectedOptions[0],customer=document.querySelector('#payment-customer'),amount=document.querySelector('[name=amount]');if(opt?.dataset.customer&&customer)customer.value=opt.dataset.customer;if(opt?.dataset.amount&&amount&&!document.querySelector('#modal-form')?.dataset.id)amount.value=opt.dataset.amount;}
  if(e.target.id==='payment-customer'){const select=document.querySelector('#payment-invoice');if(select?.selectedOptions[0]?.dataset.customer&&select.selectedOptions[0].dataset.customer!==e.target.value)select.value='';}
