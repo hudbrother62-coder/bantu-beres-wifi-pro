@@ -188,13 +188,45 @@ function currentTransactionDocument() {
  if(m?.type!=='transaction-document')return null;
  const isPayment=m.kind==='payment';
  if(!isPayment&&m.kind!=='invoice')return null;
- const record=(isPayment?state.payments:state.invoices).find(x=>x.id===m.recordId);
+ const record=m.documentRecord||(isPayment?state.payments:state.invoices).find(x=>x.id===m.recordId);
  if(!record)return null;
- const customer=state.customers.find(c=>c.id===record.customer_id);
+ const customer=m.documentCustomer||state.customers.find(c=>c.id===record.customer_id);
  if(!customer)return null;
- const invoice=isPayment?state.invoices.find(i=>i.id===record.invoice_id)||null:record;
- const packageInfo=state.packages.find(p=>p.id===customer.package_id)||null;
+ const invoice=isPayment?(m.documentInvoice||state.invoices.find(i=>i.id===record.invoice_id)||null):record;
+ const packageInfo=m.documentPackage||state.packages.find(p=>p.id===customer.package_id)||null;
  return buildTransactionDocument({kind:m.kind,record,customer,invoice,profile:state.profile||{},packageInfo,payments:m.documentPayments||state.payments});
+}
+
+
+async function showTransactionDocument(kind,recordId){
+ const uid=state.user?.id;
+ if(!uid||!['payment','invoice'].includes(kind)||!recordId)throw new Error('Transaksi tidak tersedia.');
+ const table=kind==='payment'?'payments':'invoices';
+ const {data:record,error:recordError}=await supabase.from(table).select('*').eq('user_id',uid).eq('id',recordId).maybeSingle();
+ if(recordError||!record)throw new Error('Transaksi tidak ditemukan atau tidak dapat dibaca.');
+ const {data:customer,error:customerError}=await supabase.from('customers').select('*').eq('user_id',uid).eq('id',record.customer_id).maybeSingle();
+ if(customerError||!customer)throw new Error('Data pelanggan untuk dokumen ini tidak ditemukan.');
+ let invoice=null;
+ if(kind==='payment'&&record.invoice_id){
+  const result=await supabase.from('invoices').select('*').eq('user_id',uid).eq('id',record.invoice_id).maybeSingle();
+  if(result.error)throw new Error('Tagihan terkait tidak dapat dibaca.');
+  invoice=result.data;
+ }
+ let packageInfo=null;
+ if(customer.package_id){
+  const result=await supabase.from('internet_packages').select('*').eq('user_id',uid).eq('id',customer.package_id).maybeSingle();
+  if(result.error)throw new Error('Informasi paket tidak dapat dibaca.');
+  packageInfo=result.data;
+ }
+ let documentPayments=null;
+ if(kind==='invoice'){
+  const result=await supabase.from('payments').select('id,invoice_id,amount').eq('user_id',uid).eq('invoice_id',record.id).limit(1000);
+  if(result.error)throw new Error('Riwayat pembayaran tagihan tidak dapat dibaca.');
+  documentPayments=result.data||[];
+ }
+ if(state.user?.id!==uid)throw new Error('Sesi berubah. Masuk kembali untuk melihat struk.');
+ state.modal={type:'transaction-document',kind,recordId,documentRecord:record,documentCustomer:customer,documentInvoice:invoice,documentPackage:packageInfo,documentPayments};
+ render();
 }
 
 function modalView() {
@@ -380,7 +412,7 @@ async function saveRecord(form) {
   const {data,error}=id?await supabase.from('payments').update(payload).eq('id',id).eq('user_id',uid).select('id'):await supabase.from('payments').insert({...payload,user_id:uid}).select('id');
   if(error)throw error;
   if(data?.length!==1)throw new Error('Pembayaran gagal disimpan.');
-  state.modal=null;await refresh();if(!id){state.modal={type:'transaction-document',kind:'payment',recordId:data[0].id};render();}toast(id?'Pembayaran diperbarui.':'Pembayaran dicatat. Struk siap dicetak atau dibagikan.');return;
+  state.modal=null;await refresh();if(!id){try{await showTransactionDocument('payment',data[0].id);}catch(err){toast('Pembayaran tersimpan, tetapi struk belum dapat dibuka: '+err.message,'error');}}toast(id?'Pembayaran diperbarui.':'Pembayaran dicatat. Pilih Struk untuk mencetak atau membagikan PDF.');return;
  }
  if(type==='invoice'){
   if(!state.invoices.some(i=>i.id===id))throw new Error('Tagihan tidak ditemukan.');
@@ -503,14 +535,8 @@ app.addEventListener('click', async e=>{
  const docButton=e.target.closest('[data-document]');
  if(docButton){
   const [kind,recordId]=docButton.dataset.document.split(':');
-  if(!['payment','invoice'].includes(kind)||!recordId)return;
-  let documentPayments=null;
-  if(kind==='invoice'){
-   const {data,error}=await supabase.from('payments').select('id,invoice_id,amount').eq('user_id',state.user.id).eq('invoice_id',recordId).limit(1000);
-   if(error){toast('Gagal membaca riwayat pembayaran tagihan. Coba lagi.','error');return;}
-   documentPayments=data||[];
-  }
-  state.modal={type:'transaction-document',kind,recordId,documentPayments};render();return;
+  try{await showTransactionDocument(kind,recordId);}catch(err){toast(err.message||'Gagal membuka dokumen.','error');}
+  return;
  }
  const receiptAction=e.target.closest('[data-document-action]');
  if(receiptAction){
