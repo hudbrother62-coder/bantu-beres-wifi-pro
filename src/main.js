@@ -194,7 +194,7 @@ function currentTransactionDocument() {
  if(!customer)return null;
  const invoice=isPayment?state.invoices.find(i=>i.id===record.invoice_id)||null:record;
  const packageInfo=state.packages.find(p=>p.id===customer.package_id)||null;
- return buildTransactionDocument({kind:m.kind,record,customer,invoice,profile:state.profile||{},packageInfo,payments:state.payments});
+ return buildTransactionDocument({kind:m.kind,record,customer,invoice,profile:state.profile||{},packageInfo,payments:m.documentPayments||state.payments});
 }
 
 function modalView() {
@@ -504,7 +504,13 @@ app.addEventListener('click', async e=>{
  if(docButton){
   const [kind,recordId]=docButton.dataset.document.split(':');
   if(!['payment','invoice'].includes(kind)||!recordId)return;
-  state.modal={type:'transaction-document',kind,recordId};render();return;
+  let documentPayments=null;
+  if(kind==='invoice'){
+   const {data,error}=await supabase.from('payments').select('id,invoice_id,amount').eq('user_id',state.user.id).eq('invoice_id',recordId).limit(1000);
+   if(error){toast('Gagal membaca riwayat pembayaran tagihan. Coba lagi.','error');return;}
+   documentPayments=data||[];
+  }
+  state.modal={type:'transaction-document',kind,recordId,documentPayments};render();return;
  }
  const receiptAction=e.target.closest('[data-document-action]');
  if(receiptAction){
