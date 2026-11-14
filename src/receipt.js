@@ -65,27 +65,32 @@ export function buildTransactionDocument({kind, record, customer, invoice = null
   };
 }
 
+const wifiMark = '<svg class="r-wifi" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+  '<path d="M5 17C13.3 9.7 26.7 9.7 35 17M11 23c5.1-4.6 12.9-4.6 18 0M17 29c1.7-1.5 4.3-1.5 6 0" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="20" cy="34" r="2.4" fill="currentColor"/></svg>';
+
 export function receiptMarkup(doc) {
   const rows = doc.lines.map(([label, value]) => '<div class="r-row"><dt>' + html(label) + '</dt><dd>' + html(value) + '</dd></div>').join('');
-  return '<div class="receipt-paper"><div class="r-brand">' + html(doc.businessName) +
-    '</div>' + (doc.address ? '<div class="r-center">' + html(doc.address) + '</div>' : '') +
-    (doc.contact ? '<div class="r-center">Kontak: ' + html(doc.contact) + '</div>' : '') +
-    '<div class="r-dashes"></div><div class="r-title">' + html(doc.title) +
-    '</div><dl class="r-rows">' + rows + '</dl><div class="r-dashes"></div>' +
-    '<div class="r-total"><span>' + html(doc.amountLabel) + '</span><strong>' + html(doc.amountText) + '</strong></div>' +
-    '<div class="r-dashes"></div><p class="r-footer">' + html(doc.footer) + '</p>' +
-    '<p class="r-footer small">Diterbitkan oleh Bantu Beres WiFi Pro</p></div>';
+  return '<div class="receipt-paper"><div class="r-wifi-brand">' + wifiMark + '<span>Bantu Beres<br>WiFi Pro</span></div>' +
+    '<div class="r-business">' + html(doc.businessName) + '</div>' +
+    (doc.address ? '<div class="r-center">' + html(doc.address) + '</div>' : '') +
+    (doc.contact ? '<div class="r-center">Telp/WA: ' + html(doc.contact) + '</div>' : '') +
+    '<div class="r-dashes"></div><div class="r-title">' + html(doc.title) + '</div>' +
+    '<dl class="r-rows">' + rows + '</dl>' +
+    '<div class="r-dashes"></div><div class="r-total"><span>' + html(doc.amountLabel) + '</span><strong>' + html(doc.amountText) + '</strong></div>' +
+    '<div class="r-dashes"></div><p class="r-thanks">Terima kasih</p>' +
+    '<p class="r-footer">' + html(doc.footer) + '</p><p class="r-footer small">Bukti transaksi digital · WiFi Pro</p></div>';
 }
 
 const printCss = size => 'html,body{margin:0;padding:0;background:#fff;color:#111;font-family:Arial,sans-serif}' +
-  '.receipt-paper{width:' + safeSize(size) + 'mm;max-width:100%;box-sizing:border-box;padding:5mm 3mm;margin:auto;background:white;font-size:11px}' +
-  '.r-brand{text-align:center;font-size:16px;font-weight:800;overflow-wrap:anywhere}.r-center{text-align:center;margin:3px 0;overflow-wrap:anywhere}' +
-  '.r-dashes{border-top:1px dashed #555;margin:13px 0}.r-title{text-align:center;font-size:13px;font-weight:700;letter-spacing:.035em;margin:12px 0}' +
+  '.receipt-paper{width:' + safeSize(size) + 'mm;max-width:100%;box-sizing:border-box;padding:5mm 3mm;margin:auto;background:white;font-size:11px;line-height:1.45}' +
+  '.r-wifi-brand{display:flex;align-items:center;justify-content:center;gap:6px;font-size:16px;font-weight:800;line-height:1.04;margin:2px auto 12px}.r-wifi{width:32px;height:32px;flex:none}' +
+  '.r-business{text-align:center;font-size:14px;font-weight:800;overflow-wrap:anywhere}.r-center{text-align:center;margin:3px 0;overflow-wrap:anywhere}' +
+  '.r-dashes{border-top:1px dashed #555;margin:13px 0}.r-title{text-align:center;font-size:12px;font-weight:800;letter-spacing:.035em;margin:12px 0}' +
   '.r-rows{margin:0}.r-row{display:flex;gap:8px;justify-content:space-between;margin:8px 0;align-items:baseline}.r-row dt{flex:0 0 39%;color:#444}.r-row dd{margin:0;text-align:right;flex:1;overflow-wrap:anywhere}' +
-  '.r-total{display:flex;flex-direction:column;gap:6px;text-align:center}.r-total span{font-size:10px;font-weight:700}.r-total strong{font-size:19px;overflow-wrap:anywhere}' +
-  '.r-footer{text-align:center;line-height:1.45;overflow-wrap:anywhere}.r-footer.small{font-size:9px;color:#555}' +
-  '.print-toolbar{text-align:center;padding:12px}.print-toolbar button{border:0;border-radius:8px;background:#262f8f;color:white;padding:12px 18px;font-weight:700}' +
-  '@media print{.print-toolbar{display:none!important}body{width:' + safeSize(size) + 'mm} .receipt-paper{margin:0;page-break-inside:avoid}}';
+  '.r-total{display:flex;flex-direction:column;gap:6px;text-align:center;border-radius:6px;background:#f0f2f5;padding:10px 6px}.r-total span{font-size:10px;font-weight:700}.r-total strong{font-size:19px;overflow-wrap:anywhere}' +
+  '.r-thanks{text-align:center;font-size:17px;font-weight:800;margin:12px 0 2px}.r-footer{text-align:center;line-height:1.45;margin:2px 0;overflow-wrap:anywhere}.r-footer.small{font-size:9px;color:#555;margin-top:12px}' +
+  '.print-toolbar{text-align:center;padding:12px}.print-toolbar button{border:0;border-radius:8px;background:#185bea;color:white;padding:12px 18px;font-weight:700}' +
+  '@media print{@page{size:' + safeSize(size) + 'mm auto;margin:0}.print-toolbar{display:none!important}body{width:' + safeSize(size) + 'mm}.receipt-paper{margin:0;page-break-inside:avoid}.r-total{-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
 
 export function printTransactionDocument(doc, size = 80, openWindow = typeof window !== 'undefined' ? window.open('', '_blank') : null) {
   if (!openWindow) throw new Error('Jendela cetak diblokir. Izinkan pop-up untuk situs ini.');
@@ -125,6 +130,7 @@ export function drawReceiptCanvas(doc, size = 80) {
   if (!measure) throw new Error('Browser tidak mendukung pembuatan gambar PDF.');
   const commands = [];
   let y = 28;
+  commands.push({wifi:true,y:82});y=92;
   function write(text, font = '21px Arial', align = 'left', extra = 0) {
     measure.font = font;
     const rows = wrapLine(measure, text, maxTextWidth);
@@ -133,7 +139,8 @@ export function drawReceiptCanvas(doc, size = 80) {
     y += extra;
   }
   function divider() { y += 10; commands.push({divider: true, y}); y += 13; }
-  write(doc.businessName, 'bold 29px Arial', 'center', 7);
+  write('Bantu Beres WiFi Pro', 'bold 29px Arial', 'center', 9);
+  write(doc.businessName, 'bold 27px Arial', 'center', 7);
   if (doc.address) write(doc.address, '20px Arial', 'center', 3);
   if (doc.contact) write('Kontak: ' + doc.contact, '20px Arial', 'center', 3);
   divider();
@@ -146,6 +153,7 @@ export function drawReceiptCanvas(doc, size = 80) {
   write(doc.amountLabel, 'bold 21px Arial', 'center', 3);
   write(doc.amountText, 'bold 34px Arial', 'center', 7);
   divider();
+  write('Terima kasih', 'bold 26px Arial', 'center', 5);
   write(doc.footer, '20px Arial', 'center', 5);
   write('Diterbitkan oleh Bantu Beres WiFi Pro', '18px Arial', 'center', 6);
   const canvas = document.createElement('canvas');
@@ -157,6 +165,11 @@ export function drawReceiptCanvas(doc, size = 80) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = '#111';
   for (const command of commands) {
+    if (command.wifi) {
+      ctx.save();ctx.translate(width / 2, 46);ctx.strokeStyle='#111';ctx.fillStyle='#111';ctx.lineWidth=7;ctx.lineCap='round';
+      for(const [radius, start, end] of [[33,Math.PI*1.19,Math.PI*1.81],[21,Math.PI*1.2,Math.PI*1.8],[9,Math.PI*1.27,Math.PI*1.73]]){ctx.beginPath();ctx.arc(0,0,radius,start,end);ctx.stroke();}
+      ctx.restore();continue;
+    }
     if (command.divider) {
       ctx.save();
       ctx.setLineDash([9, 6]);
