@@ -315,3 +315,60 @@ body{line-height:1.5;-webkit-font-smoothing:antialiased}
 .receipt-toolbar{flex:none;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;padding:14px 24px;border-top:1px solid var(--border)}
 .row-actions button.receipt-action{border:1px solid color-mix(in srgb,var(--primary) 36%,var(--border));background:color-mix(in srgb,var(--primary) 7%,var(--surface));color:var(--primary);font-weight:800;padding:0 10px;width:auto;min-width:53px}
 @media(max-width:520px){.receipt-modal-body{padding:14px}.receipt-preview{padding:10px}.receipt-toolbar{padding:12px 14px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.receipt-toolbar .btn{white-space:normal;height:auto;min-height:42px;padding:7px 5px;font-size:11px;text-align:center}.receipt-dialog{max-height:calc(100dvh - 24px)}}
+
+
+/* Receipt details: compact handset flow + branded thermal preview */
+.receipt-dialog-modern{width:min(900px,calc(100vw - 28px));max-width:900px;max-height:min(94dvh,960px);border-radius:18px;box-shadow:0 22px 70px #07142d38}
+.receipt-dialog-modern .receipt-dialog-header{background:linear-gradient(135deg,#123e89,#1461d8);color:#fff;display:flex;justify-content:space-between;align-items:center;padding:21px 25px;gap:12px}
+.receipt-dialog-modern .receipt-dialog-header .eyebrow{color:#d4e9ff;letter-spacing:.14em}
+.receipt-dialog-modern .receipt-dialog-header h2{margin:5px 0 0;color:#fff;font-size:21px;font-weight:800}
+.receipt-dialog-modern .receipt-dialog-header .icon-button{color:#fff;border:1px solid #ffffff5c;background:#ffffff20;flex:none}
+.receipt-dialog-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,1fr);overflow-y:auto;min-height:0;align-items:start;background:var(--surface)}
+.receipt-overview{padding:22px 23px 26px;min-width:0}
+.receipt-status{text-align:center;background:linear-gradient(180deg,#eefbf2,#f7fbf9);border:1px solid #c5ebd2;border-radius:16px;padding:22px 15px 19px;color:#12572b}
+.receipt-status-symbol{display:grid;place-items:center;margin:auto auto 11px;width:54px;height:54px;border-radius:50%;background:#209a55;color:#fff;font-size:27px;font-weight:900;box-shadow:0 5px 15px #17814325}
+.receipt-status h3{font-size:17px;font-weight:800;margin:0 0 5px;color:#12572b}
+.receipt-status p{font-size:12px;color:#43604d;line-height:1.5;margin:0}
+.receipt-overview-details{background:var(--surface);border:1px solid var(--border);border-radius:13px;margin:15px 0 16px;overflow:hidden;padding:4px 13px 12px}
+.receipt-overview-row{display:flex;justify-content:space-between;gap:10px;align-items:baseline;padding:10px 1px;border-bottom:1px solid var(--border);font-size:12px}
+.receipt-overview-row span{color:var(--muted);flex:0 0 39%}
+.receipt-overview-row b{font-weight:700;text-align:right;overflow-wrap:anywhere;min-width:0}
+.receipt-overview-total{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px;padding:15px 12px;background:color-mix(in srgb,#18a15a 9%,var(--surface));border:1px solid color-mix(in srgb,#18a15a 20%,var(--border));border-radius:11px;color:#19834e}
+.receipt-overview-total span{font-size:13px;font-weight:700}
+.receipt-overview-total strong{font-size:20px;font-weight:900;white-space:nowrap}
+.receipt-overview .receipt-size-field{font-size:12px;margin:0 0 15px}
+.receipt-action-stack{display:grid;gap:9px}
+.receipt-action-stack .btn{min-height:44px;width:100%;height:auto;white-space:normal;line-height:1.35;text-align:center;font-size:13px;box-shadow:none}
+.receipt-action-stack .btn.primary{background:#165cec;color:white}
+.receipt-action-stack .btn.secondary{background:color-mix(in srgb,#e8efff 70%,var(--surface));border-color:color-mix(in srgb,#c7d7ff 60%,var(--border));color:color-mix(in srgb,#194d9a 85%,var(--text))}
+.receipt-back-btn{border:0;border-radius:10px;height:39px;background:transparent;color:var(--muted);font-weight:700}
+.receipt-back-btn:hover{background:var(--surface2)}
+.receipt-printer-hint{font-size:11px;line-height:1.55;color:var(--muted);margin:13px 0 0;text-align:center}
+.receipt-preview-zone{background:var(--surface2);min-width:0;padding:22px 22px 18px;display:flex;flex-direction:column;gap:14px;border-left:1px solid var(--border)}
+.receipt-preview-title{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.receipt-preview-title>div{display:grid;gap:4px}
+.receipt-preview-title strong{font-size:15px;font-weight:800}
+.receipt-preview-badge{font-size:10px;font-weight:800;color:var(--primary);background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:6px 9px;white-space:nowrap}
+.receipt-preview-zone .receipt-preview{margin:0;padding:18px 12px;background:color-mix(in srgb,var(--surface2) 50%,#d9e5fb);border-radius:14px;border:1px solid var(--border);max-width:100%}
+.receipt-preview-zone .receipt-paper{padding:18px 14px 22px;box-shadow:0 8px 22px #001c5523;min-height:265px}
+.receipt-preview .r-wifi-brand{display:flex;align-items:center;justify-content:center;gap:7px;line-height:1.04;font-size:16px;font-weight:900;margin:0 auto 12px}
+.receipt-preview .r-wifi{width:32px;height:32px;flex:none}
+.receipt-preview .r-business{text-align:center;font-size:14px;font-weight:800;overflow-wrap:anywhere}
+.receipt-preview .r-total{background:#eef1f6;border-radius:7px;padding:9px 5px}
+.receipt-preview .r-thanks{text-align:center;font-size:17px;font-weight:800;margin:12px 0 3px}
+.receipt-paper-note{margin:0;color:var(--muted);font-size:11px;line-height:1.5;text-align:center}
+@media(max-width:720px){
+ .receipt-dialog-modern{width:min(480px,calc(100vw - 20px));max-height:96dvh;border-radius:15px}
+ .receipt-dialog-modern .receipt-dialog-header{padding:17px 17px}
+ .receipt-dialog-modern .receipt-dialog-header h2{font-size:19px}
+ .receipt-dialog-grid{grid-template-columns:minmax(0,1fr)}
+ .receipt-overview{padding:16px}
+ .receipt-status{padding:15px 12px}
+ .receipt-status-symbol{width:46px;height:46px;font-size:24px;margin-bottom:9px}
+ .receipt-status h3{font-size:15px}
+ .receipt-overview-details{margin:12px 0}
+ .receipt-overview-row{padding:8px 0}
+ .receipt-preview-zone{border-left:0;border-top:1px solid var(--border);padding:16px}
+ .receipt-preview-zone .receipt-preview{padding:12px}
+}
+@media(max-width:380px){.receipt-overview-total strong{font-size:18px}.receipt-preview-title strong{font-size:13px}}
