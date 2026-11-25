@@ -29,6 +29,33 @@ $('form').onsubmit=async(event)=>{
 };
 $('copy').onclick=async()=>{try{await navigator.clipboard.writeText($('code-result').textContent);message('Kode disalin. Simpan di tempat yang aman.');}catch{message('Gagal menyalin otomatis. Salin kode di atas secara manual.',true);}};
 
+
+// OTP reset is an additional option; previously issued email links remain supported.
+const otpPanel=document.createElement('section');
+otpPanel.className='email-panel';
+otpPanel.hidden=true;
+otpPanel.innerHTML='<h2>Masukkan kode OTP</h2><p class="note">Jika email berisi tautan, Anda juga dapat membuka tautan tersebut. Jangan bagikan kode OTP kepada siapa pun.</p><form id="otp-redeem-form"><label>Kode OTP<input id="otp-value" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required></label><label>Password baru<input id="otp-password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required></label><label>Konfirmasi password<input id="otp-confirmation" type="password" autocomplete="new-password" minlength="8" maxlength="128" required></label><button type="submit" id="otp-submit">Verifikasi dan ganti password</button></form>';
+$('email-panel').appendChild(otpPanel);
+let requestedEmail='';
+if(!setup){
+ $('description').textContent='Gunakan email pemulihan yang sudah tertaut atau kode pemulihan pribadi.';
+ $('email-panel').querySelector('.note').textContent='Masukkan email yang sudah tertaut ke akun. Jika pengiriman sedang penuh, permintaan diproses melalui antrean otomatis. Jika email belum pernah ditautkan, hubungi dukungan resmi untuk verifikasi kepemilikan akun.';
+ $('email-request-button').textContent='Kirim email pemulihan';
+}
+$('recovery-email').addEventListener('input',()=>{otpPanel.hidden=true;requestedEmail='';$('otp-redeem-form').reset();});
+$('otp-redeem-form').onsubmit=async(event)=>{
+ event.preventDefault();
+ if(!requestedEmail||requestedEmail!==$('recovery-email').value.trim().toLowerCase())return message('Minta email pemulihan terlebih dahulu.',true);
+ const password=$('otp-password').value,confirmation=$('otp-confirmation').value,otp=$('otp-value').value.trim();
+ if(!/^[0-9]{6}$/.test(otp)||password.length<8||password!==confirmation)return message('Periksa kode OTP dan konfirmasi password.',true);
+ const button=$('otp-submit');button.disabled=true;
+ try{
+ const {data,error}=await sb.functions.invoke('account-recovery',{body:{action:'redeem-otp',email:requestedEmail,otp,password,confirmation}});
+ if(error||!data?.ok){let reason=data?.error||'Pemulihan belum berhasil.';if(error?.context?.json){try{reason=(await error.context.json()).error||reason;}catch{}}throw new Error(reason);}
+ $('otp-redeem-form').reset();$('email-panel').hidden=true;$('code-details').hidden=true;$('title').textContent='Password telah diperbarui';message('Password berhasil diganti. Silakan kembali ke halaman login.');
+ }catch(err){message(err.message||'Pemulihan belum berhasil.',true);}finally{button.disabled=false;}
+};
+
 const emailRequestForm = $('email-request-form');
 emailRequestForm.onsubmit = async (event) => {
   event.preventDefault();
@@ -44,7 +71,9 @@ emailRequestForm.onsubmit = async (event) => {
       }
       throw new Error(reason);
     }
-    message('Jika email tertaut ke akun WiFi Pro, tautan pemulihan akan dikirim. Cek kotak masuk dan spam.');
+    requestedEmail=email;
+    otpPanel.hidden=false;
+    message('Jika email tertaut, permintaan masuk antrean pengiriman. Cek kotak masuk dan spam secara berkala.');
   } catch (error) {
     message(error.message || 'Tidak dapat mengirim permintaan reset. Coba lagi nanti.', true);
   } finally { button.disabled = false; }
