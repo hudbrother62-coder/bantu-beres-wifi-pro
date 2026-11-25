@@ -5,7 +5,7 @@ const sb=createClient(url,key);
 const $=(id)=>document.getElementById(id);
 const setup=new URLSearchParams(location.search).get('mode')==='setup';
 $('title').textContent=setup?'Siapkan kode pemulihan':'Lupa password?';
-$('description').textContent=setup?'Buat kode pemulihan yang dapat digunakan sekali bila lupa password. Konfirmasi password saat ini.':'Gunakan tautan yang dikirim ke email tertaut, atau buka opsi kode pemulihan di bawahnya.';
+$('description').textContent=setup?'Buat kode pemulihan yang dapat digunakan sekali bila lupa password. Konfirmasi password saat ini.':'Gunakan OTP dari email tertaut, atau opsi kode pemulihan di bawahnya.';
 $('old-pass').hidden=!setup;$('new-pass').hidden=setup;$('recovery-code').hidden=setup;
 $('code-details').open=setup;
 $('email-panel').hidden=setup;
@@ -36,7 +36,7 @@ emailRequestForm.onsubmit = async (event) => {
   button.disabled = true;
   try {
     const email = $('recovery-email').value.trim().toLowerCase();
-    const { data, error } = await sb.functions.invoke('account-recovery', { body: { action: 'request-email-link', email } });
+    const { data, error } = await sb.functions.invoke('wifi-recovery-otp', { body: { action: 'request', email } });
     if (error || !data?.ok) {
       let reason = data?.error || 'Permintaan pemulihan belum berhasil.';
       if (error?.context?.json) {
@@ -44,7 +44,7 @@ emailRequestForm.onsubmit = async (event) => {
       }
       throw new Error(reason);
     }
-    message('Jika email tertaut ke akun WiFi Pro, tautan pemulihan akan dikirim. Cek kotak masuk dan spam.');
+    message('Jika email tertaut, permintaan sudah diterima. Cek kotak masuk dan spam. Jika kuota penuh, pengiriman dicoba kembali setiap jam.');
   } catch (error) {
     message(error.message || 'Tidak dapat mengirim permintaan reset. Coba lagi nanti.', true);
   } finally { button.disabled = false; }
@@ -114,4 +114,18 @@ $('email-update-form').onsubmit = async (event) => {
     message('Password berhasil diganti. Anda dapat masuk kembali ke WiFi Pro.');
   } catch (error) { message(error.message || 'Gagal mengganti password.', true); }
   finally { button.disabled = false; }
+};
+
+$('otp-form').onsubmit=async(event)=>{
+ event.preventDefault();
+ const button=$('otp-button');button.disabled=true;
+ try{
+  const email=$('recovery-email').value.trim().toLowerCase();
+  if(!$('recovery-email').reportValidity())return;
+  const token=$('otp-token').value.trim(),password=$('otp-password').value,confirmation=$('otp-confirmation').value;
+  if(!/^\d{6}$/.test(token)||password.length<8||password!==confirmation)throw new Error('Isi OTP 6 digit dan password baru yang sama.');
+  const {data,error}=await sb.functions.invoke('wifi-recovery-otp',{body:{action:'verify',email,token,password,confirmation}});
+  if(error||!data?.ok){let reason=data?.error||'Kode belum dapat diverifikasi.';if(error?.context?.json){try{reason=(await error.context.json()).error||reason;}catch{}}throw new Error(reason);}
+  $('email-panel').hidden=true;$('code-details').hidden=true;$('title').textContent='Password telah diperbarui';$('otp-form').reset();message(data.message);
+ }catch(error){message(error.message||'Verifikasi gagal.',true);}finally{button.disabled=false;}
 };

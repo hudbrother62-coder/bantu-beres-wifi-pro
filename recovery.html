@@ -3,10 +3,17 @@
 </style></head><body><main class="card"><div class="eyebrow">BANTU BERES · WIFI PRO</div><h1 id="title">Lupa password?</h1><p id="description">Gunakan email login yang sudah ditautkan atau kode pemulihan pribadi untuk membuat password baru.</p><p id="message" role="status"></p>
 <section id="email-panel" class="email-panel">
   <h2>Reset password lewat email</h2>
-  <p class="note">Untuk akun dengan email login yang sudah ditautkan ke WiFi Pro. Anda akan menerima tautan verifikasi; klik tautan tersebut lalu tetapkan password baru. Kode pemulihan tetap bisa digunakan tanpa email.</p>
+  <p class="note">Untuk akun dengan email login yang sudah ditautkan ke WiFi Pro. Masukkan email tertaut untuk meminta OTP. Jika batas pengiriman tercapai, sistem mencoba kembali setiap jam. Jika email berisi tautan, tautan tersebut tetap dapat digunakan.</p>
   <form id="email-request-form">
     <label>Email login tertaut<input id="recovery-email" type="email" autocomplete="email" placeholder="nama@contoh.com" required maxlength="254"/></label>
-    <button id="email-request-button" type="submit">Kirim tautan reset password</button>
+    <button id="email-request-button" type="submit">Minta OTP email</button>
+  </form>
+  <form id="otp-form">
+    <label>Kode OTP<input id="otp-token" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required placeholder="6 digit"/></label>
+    <label>Password baru<input id="otp-password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required/></label>
+    <label>Konfirmasi password<input id="otp-confirmation" type="password" autocomplete="new-password" minlength="8" maxlength="128" required/></label>
+    <button id="otp-button" type="submit">Verifikasi OTP dan ganti password</button>
+    <p class="note">Kode berlaku 10 menit setelah berhasil dikirim. Maksimal lima percobaan. Jangan bagikan kode kepada siapa pun.</p>
   </form>
 </section>
 <details id="code-details"><summary>Gunakan kode pemulihan yang sudah disimpan</summary>
